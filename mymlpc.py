@@ -93,11 +93,11 @@ class MyMLPCNNLayer:
             otherwise the algorithm isn't stable of coverging.
         """
 
-        #self.W = np.random.uniform(-0.5, 0.5, (self.n_neurons, self.n_input))
-        #self.b = np.random.uniform(-0.5, 0.5, self.n_neurons)
+        self.W = np.random.uniform(-0.5, 0.5, (self.n_neurons, self.n_input))
+        self.b = np.random.uniform(-0.5, 0.5, self.n_neurons)
 
-        self.W = np.random.normal(-0.5, 0.5, (self.n_neurons, self.n_input))
-        self.b = np.random.normal(0.5, 0.5, self.n_neurons)
+        #self.W = np.random.normal(-0.5, 0.5, (self.n_neurons, self.n_input))
+        #self.b = np.random.normal(0.5, 0.5, self.n_neurons)
 
         # x is the input from prior layer.
         # y = wx + b
