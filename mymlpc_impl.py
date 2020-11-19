@@ -387,14 +387,9 @@ class MyMLPClassifier:
 
     def predict(self, X):
 
-        y_probs = []
+        y_probs = self.predict_prob(X)
 
-        for i in range(X.shape[0]):
-            xi = X[i]
-            yi = self.predict_prob(xi)
-            y_probs.append(yi)
-
-        y_probs = np.array(y_probs)
+        y_probs = y_probs.T
 
         y = np.where(y_probs >= self.threshold, 1, 0)
 
@@ -403,10 +398,30 @@ class MyMLPClassifier:
         return y
 
 
-    """ Predict the raw score from forward propagation
+    """ Return the probabilities/scores of X
+
     """
 
     def predict_prob(self, X):
+
+        y_probs = []
+
+        for i in range(X.shape[0]):
+            xi = X[i]
+            yi = self.predict_prob_one(xi)
+            y_probs.append(yi)
+
+        y_probs = np.array(y_probs)
+
+        y_probs = y_probs.T
+
+        return y_probs
+
+
+    """ Predict the raw score from forward propagation
+    """
+
+    def predict_prob_one(self, X):
         y = self.forward_propagation(X)
         return y
 

@@ -18,7 +18,7 @@ from sklearn.neural_network import MLPClassifier
 import matplotlib.pyplot as plt
 
 # This our implementation
-from mymlpc import MyMLPClassifier
+from mymlpc_impl import MyMLPClassifier
 
 
 # We run 10 times to measure the accuracy
@@ -223,7 +223,7 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
                         n_hiddens = 1, 
                         n_neurons = 7, 
                         learning_rate = 0.1, 
-                        n_epochs = 100, 
+                        n_epochs = 80, 
                         batch_size = 1,
                         random_seed = 1,
                         activation = 'relu',
@@ -260,7 +260,7 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
                           learning_rate_init = 0.1,
                           hidden_layer_sizes = (7,), 
                           random_state = 1,
-                          max_iter = 100)
+                          max_iter = 80)
 
 
     clf.fit(X_train, y_train.T)
@@ -365,9 +365,34 @@ if __name__ == '__main__':
 
     f = open('result.txt', 'wt')
     
-    f.write("classifier\ttest_accuracy_mean\ttest_accuracy_std\ttrain_accuracy_mean\ttrain_accuracy_std\n")
-    f.write(f"mymlpc\t{my_test_acc_mean}\t{my_test_acc_std}\t{my_train_acc_mean}\t{my_train_acc_std}\n")
-    f.write(f"skmlpc\t{sk_test_acc_mean}\t{sk_test_acc_std}\t{sk_train_acc_mean}\t{sk_train_acc_std}\n")
+    #f.write("classifier\ttest_accuracy_mean\ttest_accuracy_std\ttrain_accuracy_mean\ttrain_accuracy_std\n")
+    #f.write(f"mymlpc\t{my_test_acc_mean}\t{my_test_acc_std}\t{my_train_acc_mean}\t{my_train_acc_std}\n")
+    #f.write(f"skmlpc\t{sk_test_acc_mean}\t{sk_test_acc_std}\t{sk_train_acc_mean}\t{sk_train_acc_std}\n")
+
+    f.write("MyMLPC accuracy:\n")
+    f.write("test mean  : {my_test_acc_mean}\n")
+    f.write("test std   : {my_test_acc_std}\n")
+    f.write("train mean : {my_train_acc_mean}\n")
+    f.write("train std  : {my_train_acc_std}\n")
+
+    f.write("\n")
+    f.write("test_accurary\ttrain_accurary\n")
+    for i, (a1, a2) in enumerate(zip(my_test_accs, my_train_accs)):
+        f.write(f"{i}\t{a1}\t{a2}\n")
+
+    f.write("\n\n\n")
+
+    f.write("sk-MLPC accuracy:\n")
+    f.write(f"test mean  : {sk_test_acc_mean}\n")
+    f.write(f"test std   : {sk_test_acc_std}\n")
+    f.write(f"train mean : {sk_train_acc_mean}\n")
+    f.write(f"train std  : {sk_train_acc_std}\n")
+
+    f.write("\n")
+    f.write("test_accurary\ttrain_accurary\n")
+    for i, (a1, a2) in enumerate(zip(sk_test_accs, sk_train_accs)):
+        f.write(f"{i}\t{a1}\t{a2}\n")
+
 
     f.close()
 
