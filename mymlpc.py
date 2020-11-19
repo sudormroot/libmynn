@@ -31,7 +31,8 @@ class MyMLPCNNLayer:
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
 
-    def dsigmoid(self, y):
+    def dsigmoid(self, x):
+        y = self.sigmoid(x)
         return y * (1 - y)
 
 
@@ -39,7 +40,14 @@ class MyMLPCNNLayer:
         return np.tanh(x)
 
     def dtanh(self, x):
-        return 1.0 - x ** 2
+        y = self.tanh(x)
+        return 1.0 - y ** 2
+
+    def relu(self, x):
+        return np.max(0, x)
+
+    def drelu(self, x):
+        return 1. * (x > 0)
 
     def __init__(   self, 
                     *, 
@@ -56,12 +64,17 @@ class MyMLPCNNLayer:
         # We keep all parameters here for later use.
         self.learning_rate = learning_rate
 
-        self.f = self.sigmoid
-        self.df = self.dsigmoid
+        activations = { 'sigmoid':  (self.sigmoid,  self.dsigmoid),
+                        'tanh':     (self.tanh,     self.dtanh),
+                        'relu':     (self.relu,     self.drelu)
+                        }
 
-        if activation == 'tanh':
-            self.f = self.tanh
-            self.df = self.dtanh
+        # Check
+        assert activation in activations
+
+        # set activation function
+        self.f = activations[activation][0]
+        self.df = activations[activation][1]
 
         self.name = name
         self.batch_size = batch_size
@@ -132,7 +145,7 @@ class MyMLPCNNLayer:
 
         # We compute the value of the derivative on z.
         # The value is dz / dy
-        dzdy = self.df(self.z)
+        dzdy = self.df(self.y)
 
         # Compute (dL / dz) * (dz / dy)
         dLdy = dLdz * dzdy 
@@ -171,15 +184,13 @@ class MyMLPClassifier:
                     batch_size = 1, # The batch size for mini batch training
                     n_epochs = 30,  # The number of epochs
                     threshold = 0.5, # The threshold for prediction
-                    activation = 'sigmoid', # activation function
+                    activation = 'relu', # activation function for input and hidden layers
                     random_seed = 0, # random seed
                     debug = False
                     ):
 
 
         # Check parameters
-        supported_activations = ['sigmoid', 'tanh']
-
         assert n_epochs >= 1
         assert threshold > 0.
         assert n_input >= 1
@@ -187,7 +198,6 @@ class MyMLPClassifier:
         assert n_hiddens >= 1
         assert learning_rate >= 0.
         assert batch_size >= 1
-        assert activation in supported_activations
 
         # We keep the parameters here for later uses.
         self.n_epochs = n_epochs
@@ -237,13 +247,14 @@ class MyMLPClassifier:
 
 
         # output layer
+        # We use sigmoid activation for last layer to score into [0, 1]
         layer_output = MyMLPCNNLayer(    
                                     name = "output", 
                                     n_input = n_neurons, 
                                     n_neurons = n_output, 
                                     batch_size = batch_size,
                                     random_seed = random_seed,
-                                    activation = activation,
+                                    activation = 'sigmoid', 
                                     debug = debug
                                     )
 
@@ -373,7 +384,7 @@ class MyMLPClassifier:
 
         y_probs = np.array(y_probs)
 
-        y = np.where(y_probs >= 0.5, 1, 0)
+        y = np.where(y_probs >= self.threshold, 1, 0)
 
         y = y.T
 
