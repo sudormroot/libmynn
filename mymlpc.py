@@ -211,6 +211,9 @@ class MyMLPClassifier:
         self.random_seed = random_seed
         self.debug = debug
         
+
+        self.loss_hist = []
+
         """ We define the network structure by using our MyMLPCNNLayer class as building blocks.
             
         """
@@ -326,6 +329,8 @@ class MyMLPClassifier:
 
     def fit(self, X_train, y_train):
 
+        self.loss_hist = []
+
         # Checking input
         assert X_train.shape[0] == y_train.shape[1]
 
@@ -338,6 +343,8 @@ class MyMLPClassifier:
             idx = np.random.permutation(n_samples)
 
             loss = 0
+
+            loss_hist = []
 
             for i in range(n_samples):
 
@@ -352,13 +359,19 @@ class MyMLPClassifier:
                 # Compute loss
                 loss = self.MSELoss(y_predicted, y_truth)
 
+                loss_hist.append(loss)
+
                 # Compute the loss derivative value
                 dloss = self.MSEdLoss(y_predicted, y_truth)
 
                 # Do backward propagation
                 self.backward_propagation(dloss)
 
-            
+            # Compute average loss for each epoch
+            avg_loss = np.mean(loss_hist)
+
+            self.loss_hist.append(avg_loss)
+
             # Print accuracy for each 10 epochs
             if epoch % 10 == 0 and self.debug == True:
                 y_predicted = self.predict(X_train)
@@ -397,4 +410,8 @@ class MyMLPClassifier:
         y = self.forward_propagation(X)
         return y
 
+    """ Return the loss history
+    """
 
+    def loss_history(self):
+        return np.array(self.loss_hist)

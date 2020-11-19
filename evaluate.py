@@ -15,9 +15,15 @@ import numpy as np
 import pandas as pd
 import sklearn as sk
 from sklearn.neural_network import MLPClassifier
+import matplotlib.pyplot as plt
 
 # This our implementation
 from mymlpc import MyMLPClassifier
+
+
+# We run 10 times to measure the accuracy
+N = 10
+
 
 
 """ A implementation of one-hot coding.
@@ -145,7 +151,7 @@ def prepare_beer_dataset(txtfile):
     L = len(df_dataset)
 
     # The factor controling the splitting ratio
-    K = 0.3
+    K = 1./3.
 
     # We reserve 30% of the data as testing dataset
     n = K * L
@@ -214,6 +220,11 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
     y_predicted = clf.predict(X_train)
     accuracy = prediction_accuracy(y_predicted, y_train)
     print("Training data set accuracy: ", accuracy)
+
+    loss_hist = clf.loss_history()
+
+    plt.plot(loss_hist)
+    plt.show()
 
     print("----------- Finished -----------")
 
