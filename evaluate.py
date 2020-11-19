@@ -49,13 +49,13 @@ def one_hot_encode(labels, name):
     I = np.eye(n_labels, dtype = np.double)
 
     y = I[idx]
-    #y = y.reshape(1, -1)[0]
-
-    #y = list(y)
-
-    #print("--> y=", list(y))
 
     return list(y)
+
+
+""" Load beer data set as DataFrame
+
+"""
 
 def load_beer_dataset(txtfile):
 
@@ -71,6 +71,8 @@ def load_beer_dataset(txtfile):
 
     return df
 
+""" max-min normalisation, the data will be scaled into [-1, 1]
+"""
 
 def normalise_data(df, columns):
 
@@ -80,7 +82,7 @@ def normalise_data(df, columns):
         a = min(x)
         b = max(x)
 
-        x = (x - a) / (b - a)
+        x = ((x - a) / (b - a) - 0.5) * 2
 
         df[name] = x
 
@@ -156,8 +158,6 @@ def prepare_beer_dataset(txtfile):
     # training dataset
     X_train = df_dataset_train[x_names]
     y_train = df_dataset_train[y_name]
-    #X_train = df_dataset[x_names]
-    #y_train = df_dataset[y_name]
 
     X_train = np.array(X_train)
     y_train = list(y_train)
@@ -175,7 +175,15 @@ def prepare_beer_dataset(txtfile):
 
     return X_train, y_train, X_test, y_test
 
+""" Measure accuracy for classifier
+"""
 
+def prediction_accuracy(y_predicted, y_truth):
+    return np.mean(y_predicted == y_truth)
+
+""" The evaluation function of my MLPC
+
+"""
 
 def evaluate_mymlpc(X_train, y_train, X_test, y_test):
 
@@ -189,29 +197,26 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
                         n_output = n_output, 
                         n_hiddens = 1, 
                         n_neurons = 7, 
-                        learning_rate = 0.2, 
+                        learning_rate = 0.1, 
                         n_epochs = 100, 
                         batch_size = 1,
-                        #random_seed = 1,
-                        activation = 'sigmoid',
+                        random_seed = 1,
+                        activation = 'relu',
                         debug = False)
 
 
     clf.fit(X_train, y_train)
 
     y_predicted = clf.predict(X_test)
-    accuracy = clf.accuracy(y_predicted, y_test)
+    accuracy = prediction_accuracy(y_predicted, y_test)
     print("Testing data set accuracy: ", accuracy)
 
     y_predicted = clf.predict(X_train)
-    accuracy = clf.accuracy(y_predicted, y_train)
+    accuracy = prediction_accuracy(y_predicted, y_train)
     print("Training data set accuracy: ", accuracy)
 
     print("----------- Finished -----------")
 
-
-def prediction_accuracy(y_predicted, y_truth):
-    return np.mean(y_predicted == y_truth)
 
 def evaluate_skmlpc(X_train, y_train, X_test, y_test):
     
@@ -219,9 +224,9 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
     print("----------- Evaluation of sklearn MLPC algorithm -----------")
 
     clf = MLPClassifier(  solver = 'sgd', 
-                          activation = 'tanh', 
+                          activation = 'relu', 
                           alpha = 1e-5,
-                          learning_rate_init = 0.2,
+                          learning_rate_init = 0.1,
                           hidden_layer_sizes = (7,), 
                           random_state = 1,
                           max_iter = 100)
@@ -254,6 +259,10 @@ if __name__ == '__main__':
 
     X_train, y_train, X_test, y_test = prepare_beer_dataset('beer.txt')
 
+    # We evaluate our MLPC first.
     evaluate_mymlpc(X_train, y_train, X_test, y_test)
 
+    # We evaluate the sklearn MLPC.
     evaluate_skmlpc(X_train, y_train, X_test, y_test)
+
+

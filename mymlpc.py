@@ -44,7 +44,9 @@ class MyMLPCNNLayer:
         return 1.0 - y ** 2
 
     def relu(self, x):
-        return np.max(0, x)
+        y = x.copy()
+        y[y < 0] = 0
+        return y
 
     def drelu(self, x):
         return 1. * (x > 0)
