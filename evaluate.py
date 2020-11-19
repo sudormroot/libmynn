@@ -99,8 +99,6 @@ def normalise_data(df, columns):
     2. Transform the label into one-hot coding.
     3. Split the dataset
 
-    RETURNS:
-        X_train, y_train, X_test, y_test
 """
 
 def prepare_beer_dataset(txtfile):
@@ -144,11 +142,32 @@ def prepare_beer_dataset(txtfile):
 
     df_dataset[y_name] = y_onehot
 
+    return df_dataset
+
+
+
+""" Split the dataset for training and testing
+
+    RETURNS:
+        X_train, y_train, X_test, y_test
+"""
+
+def split_dataset(df):
+
+    # The columns for input (X)
+    x_names = ["calorific_value", "nitrogen", "turbidity", "alcohol", "sugars", "bitterness", "beer_id", "colour", "degree_of_fermentation"]
+
+    # The columns for label (y)
+    y_name = 'style'
+
+    # reshuffle the dataset
+    df = df.sample(frac = 1) 
+
     #   
     # Split dataset into training and testing datasets
     #
 
-    L = len(df_dataset)
+    L = len(df)
 
     # The factor controling the splitting ratio
     K = 1./3.
@@ -158,8 +177,8 @@ def prepare_beer_dataset(txtfile):
     n = int(n)
 
     # split data set into training and testing datasets.
-    df_dataset_test = df_dataset[0:n]
-    df_dataset_train = df_dataset[n:L]
+    df_dataset_test = df[0:n]
+    df_dataset_train = df[n:L]
 
     # training dataset
     X_train = df_dataset_train[x_names]
@@ -193,8 +212,8 @@ def prediction_accuracy(y_predicted, y_truth):
 
 def evaluate_mymlpc(X_train, y_train, X_test, y_test):
 
-    print("")
-    print("----------- Evaluation of my MLPC algorithm -----------")
+    #print("")
+    #print("----------- Evaluation of my MLPC algorithm -----------")
 
     n_input = X_train.shape[1]
     n_output = y_train.shape[0]
@@ -214,25 +233,26 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
     clf.fit(X_train, y_train)
 
     y_predicted = clf.predict(X_test)
-    accuracy = prediction_accuracy(y_predicted, y_test)
-    print("Testing data set accuracy: ", accuracy)
+    test_accuracy = prediction_accuracy(y_predicted, y_test)
+    #print("Testing data set accuracy: ", accuracy)
 
     y_predicted = clf.predict(X_train)
-    accuracy = prediction_accuracy(y_predicted, y_train)
-    print("Training data set accuracy: ", accuracy)
+    train_accuracy = prediction_accuracy(y_predicted, y_train)
+    #print("Training data set accuracy: ", accuracy)
 
-    loss_hist = clf.loss_history()
 
-    plt.plot(loss_hist)
-    plt.show()
+    #print("----------- Finished -----------")
 
-    print("----------- Finished -----------")
+    return clf, train_accuracy, test_accuracy
 
+
+""" The evaluation of sklearn MLPC algorithm
+"""
 
 def evaluate_skmlpc(X_train, y_train, X_test, y_test):
     
-    print("")
-    print("----------- Evaluation of sklearn MLPC algorithm -----------")
+    #print("")
+    #print("----------- Evaluation of sklearn MLPC algorithm -----------")
 
     clf = MLPClassifier(  solver = 'sgd', 
                           activation = 'relu', 
@@ -249,18 +269,19 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
 
     y_predicted = y_predicted.T
 
-    accuracy = prediction_accuracy(y_predicted, y_test)
-    print("Testing data set accuracy: ", accuracy)
+    test_accuracy = prediction_accuracy(y_predicted, y_test)
+    #print("Testing data set accuracy: ", accuracy)
 
     y_predicted = clf.predict(X_train)
     
     y_predicted = y_predicted.T
 
-    accuracy = prediction_accuracy(y_predicted, y_train)
-    print("Training data set accuracy: ", accuracy)
+    train_accuracy = prediction_accuracy(y_predicted, y_train)
+    #print("Training data set accuracy: ", accuracy)
 
-    print("----------- Finished -----------")
+    #print("----------- Finished -----------")
 
+    return clf, train_accuracy, test_accuracy
 
 
 """ We start evaluation here.
@@ -268,12 +289,89 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
 
 if __name__ == '__main__':
 
-    X_train, y_train, X_test, y_test = prepare_beer_dataset('beer.txt')
+    df = prepare_beer_dataset('beer.txt')
+    
+    my_test_accs = []
+    my_train_accs = []
 
-    # We evaluate our MLPC first.
-    evaluate_mymlpc(X_train, y_train, X_test, y_test)
+    sk_test_accs = []
+    sk_train_accs = []
 
-    # We evaluate the sklearn MLPC.
-    evaluate_skmlpc(X_train, y_train, X_test, y_test)
+    loss_hists = []
+
+    for i in range(N):
+        
+        #print(f"--- {i} ---")
+
+        X_train, y_train, X_test, y_test = split_dataset(df)
+
+        # We evaluate our MLPC first.
+        myclf, train_acc, test_acc = evaluate_mymlpc(X_train, y_train, X_test, y_test)
+
+        my_train_accs.append(train_acc)
+        my_test_accs.append(test_acc)
+
+        # Retrieve the loss history.
+        loss_hist = myclf.loss_history()
+        loss_hists.append(loss_hist)
 
 
+        # We evaluate the sklearn MLPC.
+        skclf, train_acc, test_acc = evaluate_skmlpc(X_train, y_train, X_test, y_test)
+        
+        sk_train_accs.append(train_acc)
+        sk_test_accs.append(test_acc)
+
+    
+    my_test_acc_mean = np.mean(my_test_accs)
+    my_test_acc_std = np.std(my_test_accs)
+
+    my_train_acc_mean = np.mean(my_train_accs)
+    my_train_acc_std = np.std(my_train_accs)
+
+    sk_test_acc_mean = np.mean(sk_test_accs)
+    sk_test_acc_std = np.std(sk_test_accs)
+
+    sk_train_acc_mean = np.mean(sk_train_accs)
+    sk_train_acc_std = np.std(sk_train_accs)
+
+    print("")
+    print("My MLPC:")
+    print("Average accuracy on testing dataset: ", my_test_acc_mean)
+    print("Standard deviation on testing dataset: ", my_test_acc_std)
+    print("")
+    
+    print("Average accuracy on training dataset: ", my_train_acc_mean)
+    print("Standard deviation on training dataset: ", my_train_acc_std)
+    print("")
+
+    print("sklearn MLPC:")
+    print("Average accuracy on testing dataset: ", sk_test_acc_mean)
+    print("Standard deviation on testing dataset: ", sk_test_acc_std)
+    print("")
+    
+    print("Average accuracy on training dataset: ", sk_train_acc_mean)
+    print("Standard deviation on training dataset: ", sk_train_acc_std)
+    print("")
+
+
+    f = open('result.txt', 'w')
+    
+    f.close()
+
+    # We draw loss-iteration figure for our MLPC
+
+    loss_hists = np.array(loss_hists)
+    loss_hist = np.mean(loss_hists, axis = 0)
+
+    plt.plot(loss_hist, color = 'coral')
+
+    plt.xlabel("Iterations", fontsize = 12)
+    plt.ylabel("MSE Loss", fontsize = 12)
+    plt.xlim(0, len(loss_hist))
+    plt.ylim(0, np.max(loss_hist))
+
+    figurefile = 'fig_mymlpc_loss.pdf'
+    plt.savefig(figurefile, dpi=600, format='pdf')
+
+    plt.show()
