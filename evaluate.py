@@ -293,11 +293,13 @@ if __name__ == '__main__':
     
     my_test_accs = []
     my_train_accs = []
-
+    
     sk_test_accs = []
     sk_train_accs = []
-
+    
     loss_hists = []
+
+
 
     for i in range(N):
         
@@ -307,6 +309,7 @@ if __name__ == '__main__':
 
         # We evaluate our MLPC first.
         myclf, train_acc, test_acc = evaluate_mymlpc(X_train, y_train, X_test, y_test)
+
 
         my_train_accs.append(train_acc)
         my_test_accs.append(test_acc)
@@ -322,7 +325,10 @@ if __name__ == '__main__':
         sk_train_accs.append(train_acc)
         sk_test_accs.append(test_acc)
 
-    
+    #
+    # Compute the mean and std of accuracies on training and testing datasets
+    #
+
     my_test_acc_mean = np.mean(my_test_accs)
     my_test_acc_std = np.std(my_test_accs)
 
@@ -355,8 +361,14 @@ if __name__ == '__main__':
     print("")
 
 
-    f = open('result.txt', 'w')
+    # Keep results into file for report writing
+
+    f = open('result.txt', 'wt')
     
+    f.write("classifier\ttest_accuracy_mean\ttest_accuracy_std\ttrain_accuracy_mean\ttrain_accuracy_std\n")
+    f.write(f"mymlpc\t{my_test_acc_mean}\t{my_test_acc_std}\t{my_train_acc_mean}\t{my_train_acc_std}\n")
+    f.write(f"skmlpc\t{sk_test_acc_mean}\t{sk_test_acc_std}\t{sk_train_acc_mean}\t{sk_train_acc_std}\n")
+
     f.close()
 
     # We draw loss-iteration figure for our MLPC
