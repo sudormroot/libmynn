@@ -15,7 +15,6 @@ The training uses SGD with batch size by 1.
 
 
 import numpy as np
-import pandas as pd
 
 
 """ We implement a NN layer here.

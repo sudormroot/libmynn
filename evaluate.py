@@ -223,9 +223,9 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
                         n_hiddens = 1, 
                         n_neurons = 7, 
                         learning_rate = 0.1, 
-                        n_epochs = 80, 
+                        n_epochs = 100, 
                         batch_size = 1,
-                        random_seed = 1,
+                        #random_seed = 1,
                         activation = 'relu',
                         debug = False)
 
@@ -259,8 +259,8 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
                           alpha = 1e-5,
                           learning_rate_init = 0.1,
                           hidden_layer_sizes = (7,), 
-                          random_state = 1,
-                          max_iter = 80)
+                          #random_state = 1,
+                          max_iter = 100)
 
 
     clf.fit(X_train, y_train.T)
@@ -370,28 +370,28 @@ if __name__ == '__main__':
     #f.write(f"skmlpc\t{sk_test_acc_mean}\t{sk_test_acc_std}\t{sk_train_acc_mean}\t{sk_train_acc_std}\n")
 
     f.write("MyMLPC accuracy:\n")
-    f.write("test mean  : {my_test_acc_mean}\n")
-    f.write("test std   : {my_test_acc_std}\n")
-    f.write("train mean : {my_train_acc_mean}\n")
-    f.write("train std  : {my_train_acc_std}\n")
+    f.write(f"test mean  : {my_test_acc_mean:.6f}\n")
+    f.write(f"test std   : {my_test_acc_std:.6f}\n")
+    f.write(f"train mean : {my_train_acc_mean:.6f}\n")
+    f.write(f"train std  : {my_train_acc_std:.6f}\n")
 
     f.write("\n")
-    f.write("test_accurary\ttrain_accurary\n")
-    for i, (a1, a2) in enumerate(zip(my_test_accs, my_train_accs)):
-        f.write(f"{i}\t{a1}\t{a2}\n")
+    f.write("train_accurary\ttest_accurary\n")
+    for i, (a1, a2) in enumerate(zip(my_train_accs, my_test_accs)):
+        f.write(f"{i+1}\t{a1:.6f}\t{a2:.6f}\n")
 
     f.write("\n\n\n")
 
     f.write("sk-MLPC accuracy:\n")
-    f.write(f"test mean  : {sk_test_acc_mean}\n")
-    f.write(f"test std   : {sk_test_acc_std}\n")
-    f.write(f"train mean : {sk_train_acc_mean}\n")
-    f.write(f"train std  : {sk_train_acc_std}\n")
+    f.write(f"test mean  : {sk_test_acc_mean:.6f}\n")
+    f.write(f"test std   : {sk_test_acc_std:.6f}\n")
+    f.write(f"train mean : {sk_train_acc_mean:.6f}\n")
+    f.write(f"train std  : {sk_train_acc_std:.6f}\n")
 
     f.write("\n")
-    f.write("test_accurary\ttrain_accurary\n")
-    for i, (a1, a2) in enumerate(zip(sk_test_accs, sk_train_accs)):
-        f.write(f"{i}\t{a1}\t{a2}\n")
+    f.write("train_accurary\ttest_accurary\n")
+    for i, (a1, a2) in enumerate(zip(sk_train_accs, sk_test_accs)):
+        f.write(f"{i+1}\t{a1:.6f}\t{a2:.6f}\n")
 
 
     f.close()
@@ -405,7 +405,7 @@ if __name__ == '__main__':
 
     plt.xlabel("Iterations", fontsize = 12)
     plt.ylabel("MSE Loss", fontsize = 12)
-    plt.xlim(0, len(loss_hist))
+    plt.xlim(0, len(loss_hist) - 1)
     plt.ylim(0, np.max(loss_hist))
 
     figurefile = 'fig_mymlpc_loss.pdf'
