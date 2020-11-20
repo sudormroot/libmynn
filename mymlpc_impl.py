@@ -179,7 +179,7 @@ class MyMLPClassifier:
                     n_neurons = 7, # The number of neurons
                     n_hiddens = 3, # The number of hidden layers
                     learning_rate = 0.5, # The learning rate
-                    batch_size = 1, # The batch size for mini batch training
+                    batch_size = 100, # The batch size for mini batch training
                     n_epochs = 30,  # The number of epochs
                     threshold = 0.5, # The threshold for prediction
                     activation = 'relu', # activation function for input and hidden layers
