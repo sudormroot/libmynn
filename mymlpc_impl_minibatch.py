@@ -24,7 +24,9 @@ import numpy as np
 class MyMLPCNNLayer:
 
     """ Activation functions and their derivative forms.
-        We allow users to choose either 'sigmoid' or 'tanh'
+        We allow users to choose 'sigmoid', 'tanh' and 'relu'
+        activation functions
+
     """
 
     def sigmoid(self, x):
@@ -200,6 +202,7 @@ class MyMLPClassifier:
                     threshold = 0.5, # The threshold for prediction
                     activation = 'relu', # activation function for input and hidden layers
                     random_seed = 0, # random seed
+                    loss = 'MSE',
                     debug = False
                     ):
 
@@ -217,6 +220,10 @@ class MyMLPClassifier:
 
         """
 
+        loss_functions = {
+                            'MSE':(self.MSELoss, self.dMSELoss)
+                        }
+
         # Check parameters
         assert n_epochs >= 1
         assert threshold > 0.
@@ -225,6 +232,7 @@ class MyMLPClassifier:
         assert n_hiddens >= 1
         assert learning_rate >= 0.
         assert batch_size >= 1
+        assert loss in loss_functions
 
         # We keep the parameters here for later uses.
         self.batch_size = batch_size
@@ -239,6 +247,9 @@ class MyMLPClassifier:
         self.random_seed = random_seed
         self.debug = debug
         
+        # Set loss function
+        self.loss = loss_functions[loss][0]
+        self.dloss = loss_functions[loss][1]
 
         self.loss_hist = []
 
@@ -338,7 +349,7 @@ class MyMLPClassifier:
 
     """
 
-    def MSEdLoss(self, y_predicted, y_truth):
+    def dMSELoss(self, y_predicted, y_truth):
         dloss = y_predicted - y_truth
         #dloss = np.mean(dloss, axis = 1)
         return dloss
@@ -406,12 +417,14 @@ class MyMLPClassifier:
                 #print("y_predicted.shape=", y_predicted.shape)
 
                 # Compute loss
-                loss = self.MSELoss(y_predicted, y_truth)
+                #loss = self.MSELoss(y_predicted, y_truth)
+                loss = self.loss(y_predicted, y_truth)
                 #print("loss=", loss)
                 loss_hist.append(loss)
 
                 # Compute the loss derivative value
-                dloss = self.MSEdLoss(y_predicted, y_truth)
+                #dloss = self.dMSELoss(y_predicted, y_truth)
+                dloss = self.dloss(y_predicted, y_truth)
                 
                 # Do backward propagation
                 self.backward_propagation(dloss)
@@ -446,7 +459,7 @@ class MyMLPClassifier:
                 loss_hist.append(loss)
 
                 # Compute the loss derivative value
-                dloss = self.MSEdLoss(y_predicted, y_truth)
+                dloss = self.dMSELoss(y_predicted, y_truth)
 
                 # Do backward propagation
                 self.backward_propagation(dloss)
