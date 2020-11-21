@@ -223,8 +223,8 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
                         n_hiddens = 1, 
                         n_neurons = 7, 
                         learning_rate = 0.001, 
-                        n_epochs = 500, 
-                        batch_size = 10,
+                        n_epochs = 100, 
+                        batch_size = 1,
                         #random_seed = 1,
                         activation = 'relu',
                         debug = False)
@@ -259,9 +259,9 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
                           alpha = 1e-5,
                           learning_rate_init = 0.001,
                           hidden_layer_sizes = (7,), 
-                          batch_size = 10,
+                          batch_size = 1,
                           #random_state = 1,
-                          max_iter = 500)
+                          max_iter = 100)
 
 
     clf.fit(X_train, y_train.T)

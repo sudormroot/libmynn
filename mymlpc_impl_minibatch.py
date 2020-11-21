@@ -59,6 +59,8 @@ class MyMLPCNNLayer:
                     learning_rate = 0.5, # learning rate
                     batch_size = 1, # batch size used for mini batch training
                     activation = 'sigmoid', # activation function
+                    W = None, # Used for loading module from file
+                    b = None, # Used for loading module from file
                     debug = False # debug flag
                     ):
 
@@ -108,6 +110,7 @@ class MyMLPCNNLayer:
         # The gradients of W and b
         self.dW = None
         self.db = None
+
 
 
     """ forward propagation implementation for one layer.
@@ -186,6 +189,7 @@ class MyMLPClassifier:
     # '*' indicates keyword only parameters
     def __init__(   self, 
                     *, 
+                    modelfile = None, # Load a module from given filename
                     n_input, # The dimension of inputs
                     n_output, # The dimension of output
                     n_neurons = 7, # The number of neurons
@@ -199,6 +203,19 @@ class MyMLPClassifier:
                     debug = False
                     ):
 
+
+        """ Checking if we need to load a module from file
+        """
+
+        if modelfile:
+            # We load existing module from a file here.
+            raise NotImplemented
+            return
+
+
+        """ Otherwise, we create a new module from parameters
+
+        """
 
         # Check parameters
         assert n_epochs >= 1
@@ -501,3 +518,21 @@ class MyMLPClassifier:
 
     def loss_history(self):
         return np.array(self.loss_hist)
+
+
+    """ Save model to a file
+    """
+
+    def save(self, modelfile):
+        raise NotImplemented
+        
+
+
+    """ Load model from a file
+    """
+
+    def load(self, modelfile):
+        raise NotImplemented
+
+
+
