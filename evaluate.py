@@ -328,7 +328,7 @@ def draw_loss(my_loss_hist, sk_loss_hist):
     if not os.path.exists(resultdir):
         os.makedirs(resultdir)
 
-    figurefile = resultdir + os.path.sep + 'fig_mymlpc_loss.pdf'
+    figurefile = resultdir + os.path.sep + 'fig_loss.pdf'
 
     plt.savefig(figurefile, dpi = 600, format = 'pdf')
 
