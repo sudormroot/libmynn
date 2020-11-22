@@ -225,8 +225,9 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
                         n_hiddens = 1, 
                         n_neurons = 7, 
                         learning_rate = 0.001, 
-                        n_epochs = 100, 
+                        n_epochs = 101, 
                         batch_size = 1,
+                        alpha = 0.0001,
                         #random_seed = 1,
                         activation = 'relu',
                         debug = False)
@@ -260,13 +261,13 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
     #print("----------- Evaluation of sklearn MLPC algorithm -----------")
 
     clf = MLPClassifier(  solver = 'sgd', 
+                          alpha = 0.0001,
                           activation = 'relu', 
-                          alpha = 1e-5,
                           learning_rate_init = 0.001,
                           hidden_layer_sizes = (7,), 
                           batch_size = 1,
                           #random_state = 1,
-                          max_iter = 100)
+                          max_iter = 101)
 
 
     clf.fit(X_train, y_train.T)
@@ -294,19 +295,33 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
 
 """
 
-def draw_loss(loss_hists):
+def draw_loss(my_loss_hist, sk_loss_hist):
 
     # We draw loss-iteration figure for our MLPC
 
-    loss_hists = np.array(loss_hists)
-    loss_hist = np.mean(loss_hists, axis = 0)
+    # normalize loss
+    my_loss_hist = my_loss_hist / max(my_loss_hist)
+    sk_loss_hist = sk_loss_hist / max(sk_loss_hist)
 
-    plt.plot(loss_hist, color = 'coral')
+    # for general paper purpose, the width is around 7.5
+    fig_width = 7.5 
+    fig_height = fig_width * 0.5
+
+    fig = plt.figure(figsize = (fig_width, fig_height))
+
+    plt.plot(my_loss_hist, color = 'coral', label = 'My-MLPC')
+    plt.plot(sk_loss_hist, color = 'turquoise', label = 'SK-MLPC')
 
     plt.xlabel("Iterations", fontsize = 12)
-    plt.ylabel("MSE Loss", fontsize = 12)
+    plt.ylabel("Normalized Loss", fontsize = 12)
+
     plt.xlim(0, len(loss_hist) - 1)
-    plt.ylim(0, np.max(loss_hist))
+    plt.ylim(0, 1)
+
+    plt.legend( loc = 'upper center',
+                fontsize = 12,
+                ncol = 2,
+                frameon = False)   
 
     resultdir = "results"
 
@@ -327,28 +342,20 @@ def print_results(results):
 
     print("")
     print("My MLPC:")
-    #print("Average accuracy on testing dataset: ", my_test_acc_mean)
     print("Average accuracy on testing dataset: ", results["mymlpc"]["test_mean"])
-    #print("Standard deviation on testing dataset: ", my_test_acc_std)
     print("Standard deviation on testing dataset: ", results["mymlpc"]["test_std"])
     print("")
     
-    #print("Average accuracy on training dataset: ", my_train_acc_mean)
     print("Average accuracy on training dataset: ", results["mymlpc"]["train_mean"])
-    #print("Standard deviation on training dataset: ", my_train_acc_std)
     print("Standard deviation on training dataset: ", results["mymlpc"]["train_std"])
     print("")
 
     print("sklearn MLPC:")
-    #print("Average accuracy on testing dataset: ", sk_test_acc_mean)
     print("Average accuracy on testing dataset: ", results["skmlpc"]["test_mean"])
-    #print("Standard deviation on testing dataset: ", sk_test_acc_std)
     print("Standard deviation on testing dataset: ", results["skmlpc"]["test_std"])
     print("")
     
-    #print("Average accuracy on training dataset: ", sk_train_acc_mean)
     print("Average accuracy on training dataset: ", results["skmlpc"]["train_mean"])
-    #print("Standard deviation on training dataset: ", sk_train_acc_std)
     print("Standard deviation on training dataset: ", results["skmlpc"]["train_std"])
     print("")
 
@@ -371,38 +378,28 @@ def save_results(results):
     
 
     f.write("MyMLPC accuracy:\n")
-    #f.write(f"test  mean : {my_test_acc_mean:.6f}\n")
     f.write(f"test  mean : {results['mymlpc']['test_mean']:.6f}\n")
-    #f.write(f"test  std  : {my_test_acc_std:.6f}\n")
     f.write(f"test  std  : {results['mymlpc']['test_std']:.6f}\n")
-    #f.write(f"train mean : {my_train_acc_mean:.6f}\n")
     f.write(f"train mean : {results['mymlpc']['train_mean']:.6f}\n")
-    #f.write(f"train std  : {my_train_acc_std:.6f}\n")
     f.write(f"train std  : {results['mymlpc']['train_std']:.6f}\n")
 
     f.write("\n")
     f.write("train_accurary\ttest_accurary\n")
 
-    #for i, (a1, a2) in enumerate(zip(my_train_accs, my_test_accs)):
     for i, (a1, a2) in enumerate(zip(results["mymlpc"]["train_accs"] , results["mymlpc"]["test_accs"] )):
         f.write(f"{i+1}\t{a1:.6f}\t{a2:.6f}\n")
 
     f.write("\n\n\n")
 
     f.write("sk-MLPC accuracy:\n")
-    #f.write(f"test mean  : {sk_test_acc_mean:.6f}\n")
     f.write(f"test mean  : {results['skmlpc']['test_mean']:.6f}\n")
-    #f.write(f"test std   : {sk_test_acc_std:.6f}\n")
     f.write(f"test std   : {results['skmlpc']['test_std']:.6f}\n")
-    #f.write(f"train mean : {sk_train_acc_mean:.6f}\n")
     f.write(f"train mean : {results['skmlpc']['train_mean']:.6f}\n")
-    #f.write(f"train std  : {sk_train_acc_std:.6f}\n")
     f.write(f"train std  : {results['skmlpc']['train_std']:.6f}\n")
 
     f.write("\n")
     f.write("train_accurary\ttest_accurary\n")
 
-    #for i, (a1, a2) in enumerate(zip(sk_train_accs, sk_test_accs)):
     for i, (a1, a2) in enumerate(zip(results["skmlpc"]["train_accs"], results["skmlpc"]["test_accs"])):
         f.write(f"{i+1}\t{a1:.6f}\t{a2:.6f}\n")
 
@@ -410,14 +407,12 @@ def save_results(results):
     # generate LaTex code for report writing.
     f.write("\n\n\n\n")
     f.write("LaTex\n")
-    #for i, (a1, a2, a3, a4) in enumerate(zip(my_train_accs, my_test_accs, sk_train_accs, sk_test_accs)):
+
     for i, (a1, a2, a3, a4) in enumerate(zip(   results["mymlpc"]["train_accs"], results["mymlpc"]["test_accs"], 
                                                 results["skmlpc"]["train_accs"], results["skmlpc"]["test_accs"])):
         f.write(f"{i+1} & {a1:.6f} & {a2:.6f} & {a3:.6f} & {a4:.6f} \\\\ \n")
 
-    #f.write(f"\\textbf{{mean}} & {my_train_acc_mean:.6f} & {my_test_acc_mean:.6f} & {sk_train_acc_mean:.6f} & {sk_test_acc_mean:.6f} \\\\ \n")
     f.write(f"\\textbf{{mean}} & {results['mymlpc']['train_mean']:.6f} & {results['mymlpc']['test_mean']:.6f} & {results['skmlpc']['train_mean']:.6f} & {results['skmlpc']['test_mean']:.6f} \\\\ \n")
-    #f.write(f"\\textbf{{std}} & {my_train_acc_std:.6f} & {my_test_acc_std:.6f} & {sk_train_acc_std:.6f} & {sk_test_acc_std:.6f} \\\\ \n")
     f.write(f"\\textbf{{std}} & {results['mymlpc']['train_std']:.6f} & {results['mymlpc']['test_std']:.6f} & {results['skmlpc']['train_std']:.6f} & {results['skmlpc']['test_std']:.6f} \\\\ \n")
     f.write("\n\n\n\n")
 
@@ -439,8 +434,8 @@ if __name__ == '__main__':
     sk_test_accs = []
     sk_train_accs = []
     
-    loss_hists = []
-
+    my_loss_hists = []
+    sk_loss_hists = []
 
 
     for i in range(N):
@@ -452,20 +447,22 @@ if __name__ == '__main__':
         # We evaluate our MLPC first.
         myclf, train_acc, test_acc = evaluate_mymlpc(X_train, y_train, X_test, y_test)
 
-
         my_train_accs.append(train_acc)
         my_test_accs.append(test_acc)
 
         # Retrieve the loss history.
         loss_hist = myclf.loss_history()
-        loss_hists.append(loss_hist)
-
+        my_loss_hists.append(loss_hist)
 
         # We evaluate the sklearn MLPC.
         skclf, train_acc, test_acc = evaluate_skmlpc(X_train, y_train, X_test, y_test)
         
         sk_train_accs.append(train_acc)
         sk_test_accs.append(test_acc)
+
+        loss_hist = skclf.loss_curve_
+        sk_loss_hists.append(loss_hist)
+
 
     #
     # Compute the mean and std of accuracies on training and testing datasets
@@ -475,11 +472,7 @@ if __name__ == '__main__':
 
 
     results["mymlpc"] = {}
-    #results["mymlpc"]["train"] = {}
-    #results["mymlpc"]["test"] = {}
     results["skmlpc"] = {}
-    #results["skmlpc"]["train"] = {}
-    #results["skmlpc"]["test"] = {}
 
     results["mymlpc"]["test_accs"] = my_test_accs
     results["mymlpc"]["train_accs"] = my_train_accs
@@ -487,30 +480,29 @@ if __name__ == '__main__':
     results["skmlpc"]["test_accs"] = sk_test_accs
     results["skmlpc"]["train_accs"] = sk_train_accs
 
-    #my_test_acc_mean = np.mean(my_test_accs)
-    #my_test_acc_std = np.std(my_test_accs)
 
     results["mymlpc"]["test_mean"] = np.mean(my_test_accs)
     results["mymlpc"]["test_std"] = np.std(my_test_accs)
 
-    #my_train_acc_mean = np.mean(my_train_accs)
-    #my_train_acc_std = np.std(my_train_accs)
-
     results["mymlpc"]["train_mean"] = np.mean(my_train_accs)
     results["mymlpc"]["train_std"] = np.std(my_train_accs)
-
-    #sk_test_acc_mean = np.mean(sk_test_accs)
-    #sk_test_acc_std = np.std(sk_test_accs)
 
     results["skmlpc"]["test_mean"] = np.mean(sk_test_accs)
     results["skmlpc"]["test_std"] = np.std(sk_test_accs)
 
-    #sk_train_acc_mean = np.mean(sk_train_accs)
-    #sk_train_acc_std = np.std(sk_train_accs)
-
     results["skmlpc"]["train_mean"] = np.mean(sk_train_accs)
     results["skmlpc"]["train_std"] = np.std(sk_train_accs)
 
+    # Compute mean loss for all runs.
+    my_loss_hists = np.array(my_loss_hists)
+    my_loss_hist = np.mean(my_loss_hists, axis = 0)
+
+    sk_loss_hists = np.array(sk_loss_hists)
+    sk_loss_hist = np.mean(sk_loss_hists, axis = 0)
+
+    # present results
     print_results(results)
     save_results(results)
-    draw_loss(loss_hists)
+    draw_loss(my_loss_hist, sk_loss_hist)
+
+

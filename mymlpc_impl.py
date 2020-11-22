@@ -203,7 +203,7 @@ class MyMLPClassifier:
                     activation = 'relu', # activation function for input and hidden layers
                     random_seed = 0, # random seed
                     loss = 'MSE',
-                    alpha = 0.001, # regularization factor
+                    alpha = 0.0001, # regularization factor
                     debug = False
                     ):
 
