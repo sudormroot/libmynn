@@ -2,3 +2,6 @@ __pycache__
 *.pdf
 result.txt
 *.bak
+results
+results/results.txt
+results/*.pdf

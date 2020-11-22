@@ -17,6 +17,8 @@ import sklearn as sk
 from sklearn.neural_network import MLPClassifier
 import matplotlib.pyplot as plt
 
+import os
+
 # This our implementation
 from mymlpc_impl import MyMLPClassifier
 
@@ -222,7 +224,7 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
                         n_output = n_output, 
                         n_hiddens = 1, 
                         n_neurons = 7, 
-                        learning_rate = 0.1, 
+                        learning_rate = 0.001, 
                         n_epochs = 100, 
                         batch_size = 1,
                         #random_seed = 1,
@@ -231,6 +233,9 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
 
 
     clf.fit(X_train, y_train)
+
+    # for debug purposes
+    # clf.print_weights()
 
     y_predicted = clf.predict(X_test)
     test_accuracy = prediction_accuracy(y_predicted, y_test)
@@ -257,8 +262,9 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
     clf = MLPClassifier(  solver = 'sgd', 
                           activation = 'relu', 
                           alpha = 1e-5,
-                          learning_rate_init = 0.1,
+                          learning_rate_init = 0.001,
                           hidden_layer_sizes = (7,), 
+                          batch_size = 1,
                           #random_state = 1,
                           max_iter = 100)
 
@@ -282,6 +288,142 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
     #print("----------- Finished -----------")
 
     return clf, train_accuracy, test_accuracy
+
+
+""" Draw loss
+
+"""
+
+def draw_loss(loss_hists):
+
+    # We draw loss-iteration figure for our MLPC
+
+    loss_hists = np.array(loss_hists)
+    loss_hist = np.mean(loss_hists, axis = 0)
+
+    plt.plot(loss_hist, color = 'coral')
+
+    plt.xlabel("Iterations", fontsize = 12)
+    plt.ylabel("MSE Loss", fontsize = 12)
+    plt.xlim(0, len(loss_hist) - 1)
+    plt.ylim(0, np.max(loss_hist))
+
+    resultdir = "results"
+
+    if not os.path.exists(resultdir):
+        os.makedirs(resultdir)
+
+    figurefile = resultdir + os.path.sep + 'fig_mymlpc_loss.pdf'
+
+    plt.savefig(figurefile, dpi = 600, format = 'pdf')
+
+    plt.show()
+
+
+""" Print results
+
+"""
+def print_results(results):
+
+    print("")
+    print("My MLPC:")
+    #print("Average accuracy on testing dataset: ", my_test_acc_mean)
+    print("Average accuracy on testing dataset: ", results["mymlpc"]["test_mean"])
+    #print("Standard deviation on testing dataset: ", my_test_acc_std)
+    print("Standard deviation on testing dataset: ", results["mymlpc"]["test_std"])
+    print("")
+    
+    #print("Average accuracy on training dataset: ", my_train_acc_mean)
+    print("Average accuracy on training dataset: ", results["mymlpc"]["train_mean"])
+    #print("Standard deviation on training dataset: ", my_train_acc_std)
+    print("Standard deviation on training dataset: ", results["mymlpc"]["train_std"])
+    print("")
+
+    print("sklearn MLPC:")
+    #print("Average accuracy on testing dataset: ", sk_test_acc_mean)
+    print("Average accuracy on testing dataset: ", results["skmlpc"]["test_mean"])
+    #print("Standard deviation on testing dataset: ", sk_test_acc_std)
+    print("Standard deviation on testing dataset: ", results["skmlpc"]["test_std"])
+    print("")
+    
+    #print("Average accuracy on training dataset: ", sk_train_acc_mean)
+    print("Average accuracy on training dataset: ", results["skmlpc"]["train_mean"])
+    #print("Standard deviation on training dataset: ", sk_train_acc_std)
+    print("Standard deviation on training dataset: ", results["skmlpc"]["train_std"])
+    print("")
+
+
+
+""" Save results to file
+
+"""
+
+def save_results(results):
+
+    # Keep results into file for report writing
+
+    resultdir = "results"
+
+    if not os.path.exists(resultdir):
+        os.makedirs(resultdir)
+
+    f = open(resultdir + os.path.sep + 'results.txt', 'wt')
+    
+
+    f.write("MyMLPC accuracy:\n")
+    #f.write(f"test  mean : {my_test_acc_mean:.6f}\n")
+    f.write(f"test  mean : {results['mymlpc']['test_mean']:.6f}\n")
+    #f.write(f"test  std  : {my_test_acc_std:.6f}\n")
+    f.write(f"test  std  : {results['mymlpc']['test_std']:.6f}\n")
+    #f.write(f"train mean : {my_train_acc_mean:.6f}\n")
+    f.write(f"train mean : {results['mymlpc']['train_mean']:.6f}\n")
+    #f.write(f"train std  : {my_train_acc_std:.6f}\n")
+    f.write(f"train std  : {results['mymlpc']['train_std']:.6f}\n")
+
+    f.write("\n")
+    f.write("train_accurary\ttest_accurary\n")
+
+    #for i, (a1, a2) in enumerate(zip(my_train_accs, my_test_accs)):
+    for i, (a1, a2) in enumerate(zip(results["mymlpc"]["train_accs"] , results["mymlpc"]["test_accs"] )):
+        f.write(f"{i+1}\t{a1:.6f}\t{a2:.6f}\n")
+
+    f.write("\n\n\n")
+
+    f.write("sk-MLPC accuracy:\n")
+    #f.write(f"test mean  : {sk_test_acc_mean:.6f}\n")
+    f.write(f"test mean  : {results['skmlpc']['test_mean']:.6f}\n")
+    #f.write(f"test std   : {sk_test_acc_std:.6f}\n")
+    f.write(f"test std   : {results['skmlpc']['test_std']:.6f}\n")
+    #f.write(f"train mean : {sk_train_acc_mean:.6f}\n")
+    f.write(f"train mean : {results['skmlpc']['train_mean']:.6f}\n")
+    #f.write(f"train std  : {sk_train_acc_std:.6f}\n")
+    f.write(f"train std  : {results['skmlpc']['train_std']:.6f}\n")
+
+    f.write("\n")
+    f.write("train_accurary\ttest_accurary\n")
+
+    #for i, (a1, a2) in enumerate(zip(sk_train_accs, sk_test_accs)):
+    for i, (a1, a2) in enumerate(zip(results["skmlpc"]["train_accs"], results["skmlpc"]["test_accs"])):
+        f.write(f"{i+1}\t{a1:.6f}\t{a2:.6f}\n")
+
+
+    # generate LaTex code for report writing.
+    f.write("\n\n\n\n")
+    f.write("LaTex\n")
+    #for i, (a1, a2, a3, a4) in enumerate(zip(my_train_accs, my_test_accs, sk_train_accs, sk_test_accs)):
+    for i, (a1, a2, a3, a4) in enumerate(zip(   results["mymlpc"]["train_accs"], results["mymlpc"]["test_accs"], 
+                                                results["skmlpc"]["train_accs"], results["skmlpc"]["test_accs"])):
+        f.write(f"{i+1} & {a1:.6f} & {a2:.6f} & {a3:.6f} & {a4:.6f} \\\\ \n")
+
+    #f.write(f"\\textbf{{mean}} & {my_train_acc_mean:.6f} & {my_test_acc_mean:.6f} & {sk_train_acc_mean:.6f} & {sk_test_acc_mean:.6f} \\\\ \n")
+    f.write(f"\\textbf{{mean}} & {results['mymlpc']['train_mean']:.6f} & {results['mymlpc']['test_mean']:.6f} & {results['skmlpc']['train_mean']:.6f} & {results['skmlpc']['test_mean']:.6f} \\\\ \n")
+    #f.write(f"\\textbf{{std}} & {my_train_acc_std:.6f} & {my_test_acc_std:.6f} & {sk_train_acc_std:.6f} & {sk_test_acc_std:.6f} \\\\ \n")
+    f.write(f"\\textbf{{std}} & {results['mymlpc']['train_std']:.6f} & {results['mymlpc']['test_std']:.6f} & {results['skmlpc']['train_std']:.6f} & {results['skmlpc']['test_std']:.6f} \\\\ \n")
+    f.write("\n\n\n\n")
+
+    f.close()
+
+
 
 
 """ We start evaluation here.
@@ -329,86 +471,46 @@ if __name__ == '__main__':
     # Compute the mean and std of accuracies on training and testing datasets
     #
 
-    my_test_acc_mean = np.mean(my_test_accs)
-    my_test_acc_std = np.std(my_test_accs)
-
-    my_train_acc_mean = np.mean(my_train_accs)
-    my_train_acc_std = np.std(my_train_accs)
-
-    sk_test_acc_mean = np.mean(sk_test_accs)
-    sk_test_acc_std = np.std(sk_test_accs)
-
-    sk_train_acc_mean = np.mean(sk_train_accs)
-    sk_train_acc_std = np.std(sk_train_accs)
-
-    print("")
-    print("My MLPC:")
-    print("Average accuracy on testing dataset: ", my_test_acc_mean)
-    print("Standard deviation on testing dataset: ", my_test_acc_std)
-    print("")
-    
-    print("Average accuracy on training dataset: ", my_train_acc_mean)
-    print("Standard deviation on training dataset: ", my_train_acc_std)
-    print("")
-
-    print("sklearn MLPC:")
-    print("Average accuracy on testing dataset: ", sk_test_acc_mean)
-    print("Standard deviation on testing dataset: ", sk_test_acc_std)
-    print("")
-    
-    print("Average accuracy on training dataset: ", sk_train_acc_mean)
-    print("Standard deviation on training dataset: ", sk_train_acc_std)
-    print("")
+    results = {}
 
 
-    # Keep results into file for report writing
+    results["mymlpc"] = {}
+    #results["mymlpc"]["train"] = {}
+    #results["mymlpc"]["test"] = {}
+    results["skmlpc"] = {}
+    #results["skmlpc"]["train"] = {}
+    #results["skmlpc"]["test"] = {}
 
-    f = open('result.txt', 'wt')
-    
-    #f.write("classifier\ttest_accuracy_mean\ttest_accuracy_std\ttrain_accuracy_mean\ttrain_accuracy_std\n")
-    #f.write(f"mymlpc\t{my_test_acc_mean}\t{my_test_acc_std}\t{my_train_acc_mean}\t{my_train_acc_std}\n")
-    #f.write(f"skmlpc\t{sk_test_acc_mean}\t{sk_test_acc_std}\t{sk_train_acc_mean}\t{sk_train_acc_std}\n")
+    results["mymlpc"]["test_accs"] = my_test_accs
+    results["mymlpc"]["train_accs"] = my_train_accs
 
-    f.write("MyMLPC accuracy:\n")
-    f.write(f"test mean  : {my_test_acc_mean:.6f}\n")
-    f.write(f"test std   : {my_test_acc_std:.6f}\n")
-    f.write(f"train mean : {my_train_acc_mean:.6f}\n")
-    f.write(f"train std  : {my_train_acc_std:.6f}\n")
+    results["skmlpc"]["test_accs"] = sk_test_accs
+    results["skmlpc"]["train_accs"] = sk_train_accs
 
-    f.write("\n")
-    f.write("train_accurary\ttest_accurary\n")
-    for i, (a1, a2) in enumerate(zip(my_train_accs, my_test_accs)):
-        f.write(f"{i+1}\t{a1:.6f}\t{a2:.6f}\n")
+    #my_test_acc_mean = np.mean(my_test_accs)
+    #my_test_acc_std = np.std(my_test_accs)
 
-    f.write("\n\n\n")
+    results["mymlpc"]["test_mean"] = np.mean(my_test_accs)
+    results["mymlpc"]["test_std"] = np.std(my_test_accs)
 
-    f.write("sk-MLPC accuracy:\n")
-    f.write(f"test mean  : {sk_test_acc_mean:.6f}\n")
-    f.write(f"test std   : {sk_test_acc_std:.6f}\n")
-    f.write(f"train mean : {sk_train_acc_mean:.6f}\n")
-    f.write(f"train std  : {sk_train_acc_std:.6f}\n")
+    #my_train_acc_mean = np.mean(my_train_accs)
+    #my_train_acc_std = np.std(my_train_accs)
 
-    f.write("\n")
-    f.write("train_accurary\ttest_accurary\n")
-    for i, (a1, a2) in enumerate(zip(sk_train_accs, sk_test_accs)):
-        f.write(f"{i+1}\t{a1:.6f}\t{a2:.6f}\n")
+    results["mymlpc"]["train_mean"] = np.mean(my_train_accs)
+    results["mymlpc"]["train_std"] = np.std(my_train_accs)
 
+    #sk_test_acc_mean = np.mean(sk_test_accs)
+    #sk_test_acc_std = np.std(sk_test_accs)
 
-    f.close()
+    results["skmlpc"]["test_mean"] = np.mean(sk_test_accs)
+    results["skmlpc"]["test_std"] = np.std(sk_test_accs)
 
-    # We draw loss-iteration figure for our MLPC
+    #sk_train_acc_mean = np.mean(sk_train_accs)
+    #sk_train_acc_std = np.std(sk_train_accs)
 
-    loss_hists = np.array(loss_hists)
-    loss_hist = np.mean(loss_hists, axis = 0)
+    results["skmlpc"]["train_mean"] = np.mean(sk_train_accs)
+    results["skmlpc"]["train_std"] = np.std(sk_train_accs)
 
-    plt.plot(loss_hist, color = 'coral')
-
-    plt.xlabel("Iterations", fontsize = 12)
-    plt.ylabel("MSE Loss", fontsize = 12)
-    plt.xlim(0, len(loss_hist) - 1)
-    plt.ylim(0, np.max(loss_hist))
-
-    figurefile = 'fig_mymlpc_loss.pdf'
-    plt.savefig(figurefile, dpi=600, format='pdf')
-
-    plt.show()
+    print_results(results)
+    save_results(results)
+    draw_loss(loss_hists)

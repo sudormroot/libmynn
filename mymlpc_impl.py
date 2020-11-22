@@ -24,7 +24,9 @@ import numpy as np
 class MyMLPCNNLayer:
 
     """ Activation functions and their derivative forms.
-        We allow users to choose either 'sigmoid' or 'tanh'
+        We allow users to choose 'sigmoid', 'tanh' and 'relu'
+        activation functions
+
     """
 
     def sigmoid(self, x):
@@ -59,6 +61,8 @@ class MyMLPCNNLayer:
                     learning_rate = 0.5, # learning rate
                     batch_size = 1, # batch size used for mini batch training
                     activation = 'sigmoid', # activation function
+                    W = None, # Used for loading model from file
+                    b = None, # Used for loading model from file
                     debug = False # debug flag
                     ):
 
@@ -93,7 +97,7 @@ class MyMLPCNNLayer:
         """
 
         self.W = np.random.uniform(-1, 1, (self.n_neurons, self.n_input))
-        self.b = np.random.uniform(-1, 1, self.n_neurons)
+        self.b = np.random.uniform(-1, 1, (self.n_neurons, 1))
 
         #self.W = np.random.normal(-0.5, 0.5, (self.n_neurons, self.n_input))
         #self.b = np.random.normal(0.5, 0.5, self.n_neurons)
@@ -108,6 +112,7 @@ class MyMLPCNNLayer:
         # The gradients of W and b
         self.dW = None
         self.db = None
+
 
 
     """ forward propagation implementation for one layer.
@@ -141,20 +146,32 @@ class MyMLPCNNLayer:
         # Keep a private copy of dL / dz
         dLdz = grad.copy()
 
+
         # We compute the value of the derivative on z.
         # The value is dz / dy
         dzdy = self.df(self.y)
+
 
         # Compute (dL / dz) * (dz / dy)
         dLdy = dLdz * dzdy 
         
         # Compute the gradients of W and b
-        self.db = dLdy
-        self.dW = dLdy.reshape(-1, 1).dot(self.x.reshape(1, -1))
+        #self.db = dLdy
+        #self.dW = dLdy.reshape(-1, 1).dot(self.x.reshape(1, -1))
 
-        
+        self.dW = dLdy.dot(self.x.T) / self.batch_size
+
+        self.db = np.mean(dLdy, axis=1).reshape(-1, 1)
+
         # Compute the output gradients for prior layer.
-        grad_next = dLdy.dot(self.W)
+        #grad_next = dLdy.dot(self.W)
+        grad_next = dLdy.T.dot(self.W)
+
+
+        grad_next = np.sum(grad_next, axis = 0) / self.batch_size
+
+        grad_next = grad_next.reshape(-1, 1)
+
 
         # We can adjust weights now.
         self.W = self.W - self.learning_rate * self.dW
@@ -174,19 +191,39 @@ class MyMLPClassifier:
     # '*' indicates keyword only parameters
     def __init__(   self, 
                     *, 
+                    modelfile = None, # Load a model from given filename
                     n_input, # The dimension of inputs
                     n_output, # The dimension of output
                     n_neurons = 7, # The number of neurons
                     n_hiddens = 3, # The number of hidden layers
                     learning_rate = 0.5, # The learning rate
-                    batch_size = 100, # The batch size for mini batch training
+                    batch_size = 200, # The batch size for mini batch training
                     n_epochs = 30,  # The number of epochs
                     threshold = 0.5, # The threshold for prediction
                     activation = 'relu', # activation function for input and hidden layers
                     random_seed = 0, # random seed
+                    loss = 'MSE',
+                    alpha = 0.001, # regularization factor
                     debug = False
                     ):
 
+
+        """ Checking if we need to load a model from file
+        """
+
+        if modelfile:
+            # We load existing model from a file here.
+            raise NotImplemented
+            return
+
+
+        """ Otherwise, we create a new model from parameters
+
+        """
+
+        loss_functions = {
+                            'MSE':(self.MSELoss, self.dMSELoss)
+                        }
 
         # Check parameters
         assert n_epochs >= 1
@@ -196,8 +233,11 @@ class MyMLPClassifier:
         assert n_hiddens >= 1
         assert learning_rate >= 0.
         assert batch_size >= 1
+        assert loss in loss_functions
+        assert alpha >= 0.
 
         # We keep the parameters here for later uses.
+        self.batch_size = batch_size
         self.n_epochs = n_epochs
         self.threshold = threshold
         self.n_input = n_input
@@ -205,11 +245,14 @@ class MyMLPClassifier:
         self.n_neurons = n_neurons
         self.n_hiddens = n_hiddens
         self.learning_rate = learning_rate
-        self.batch_size = batch_size
         self.activation = activation
         self.random_seed = random_seed
         self.debug = debug
-        
+        self.alpha = alpha
+
+        # Set loss function
+        self.loss = loss_functions[loss][0]
+        self.dloss = loss_functions[loss][1]
 
         self.loss_hist = []
 
@@ -284,6 +327,7 @@ class MyMLPClassifier:
 
     def forward_propagation(self, x):
 
+
         z = x.T
         
         for layer in self.net:
@@ -291,13 +335,42 @@ class MyMLPClassifier:
 
         return z
 
+
+    """ Print weights
+    """
+
+    def print_weights(self):
+
+        for layer in self.net:
+            print(layer.name)
+            print("W:")
+            print(layer.W)
+            print("b:")
+            print(layer.b)
+
+
+    """ Regularization
+    """
+
+    def regularization(self):
+
+        r = 0.0
+
+        for layer in self.net:
+            r += np.sum(np.abs(layer.W)) + np.sum(np.abs(layer.b))
+
+        r *= self.alpha
+
+        return r
+
     """ We use MSE loss
     """
 
     def MSELoss(self, y_predicted, y_truth):
 
         loss =  0.5 * np.power((y_predicted - y_truth), 2)
-        loss = np.sum(loss)  
+        loss = np.sum(loss, axis = 0)  
+        loss = np.mean(loss)
 
         return loss
 
@@ -307,8 +380,9 @@ class MyMLPClassifier:
 
     """
 
-    def MSEdLoss(self, y_predicted, y_truth):
+    def dMSELoss(self, y_predicted, y_truth):
         dloss = y_predicted - y_truth
+        #dloss = np.mean(dloss, axis = 1)
         return dloss
 
 
@@ -316,11 +390,6 @@ class MyMLPClassifier:
     """
 
     def accuracy(self, y_predicted, y_truth):
-
-        y = y_predicted == y_truth
-
-        print("y=", y)
-
         return np.mean(y_predicted == y_truth)
 
     """ Training our neural networks.
@@ -338,17 +407,72 @@ class MyMLPClassifier:
         # Checking input
         assert X_train.shape[0] == y_train.shape[1]
 
-        # SGD implementation
+        # mini batch SGD implementation
         for epoch in range(self.n_epochs):
  
             xshape = X_train.shape
 
             n_samples = xshape[0]
-            idx = np.random.permutation(n_samples)
+
+            # Check batch size
+            self.batch_size = min(self.batch_size, n_samples)
+            assert self.batch_size >= 1
+
+            indices = np.arange(n_samples)
+
+            # reshuffle samples
+            np.random.shuffle(indices)
+
+            #debug
+            #print("indices=", indices)
+
+            grads = []
 
             loss = 0
-
             loss_hist = []
+
+            # Train with a batch size
+            for start_idx in range(0, n_samples - self.batch_size + 1, self.batch_size):
+                end_idx = min(start_idx + self.batch_size, xshape[0])
+
+                sel = indices[start_idx:end_idx]
+            
+                # select a batch of samples
+                X = X_train[sel]
+                y_truth = y_train.T[sel].T
+
+                # Compute forward propagation data
+                y_predicted = self.forward_propagation(X)
+                #y_predicted = self.predict_prob(X)
+
+                #print("y_predicted.shape=", y_predicted.shape)
+
+                # Compute loss
+                #loss = self.MSELoss(y_predicted, y_truth)
+                loss = self.loss(y_predicted, y_truth)
+                #print("loss=", loss)
+                loss_hist.append(loss)
+
+                # Compute the loss derivative value
+                #dloss = self.dMSELoss(y_predicted, y_truth)
+                dloss = self.dloss(y_predicted, y_truth) + self.regularization()
+                
+                # Do backward propagation
+                self.backward_propagation(dloss)
+
+
+            # Compute average loss for each epoch
+            avg_loss = np.mean(loss_hist)
+            self.loss_hist.append(avg_loss)
+
+            # Print accuracy for each 10 epochs
+            if epoch % 10 == 0 and self.debug == True:
+                y_predicted = self.predict(X_train)
+                accuracy = self.accuracy(y_predicted, y_train)
+                print(f"epoch={epoch} loss={loss} accuracy={accuracy}")
+ 
+            """ Old implementation with batch size 1
+            idx = np.random.permutation(n_samples)
 
             for i in range(n_samples):
 
@@ -366,7 +490,7 @@ class MyMLPClassifier:
                 loss_hist.append(loss)
 
                 # Compute the loss derivative value
-                dloss = self.MSEdLoss(y_predicted, y_truth)
+                dloss = self.dMSELoss(y_predicted, y_truth)
 
                 # Do backward propagation
                 self.backward_propagation(dloss)
@@ -381,7 +505,7 @@ class MyMLPClassifier:
                 y_predicted = self.predict(X_train)
                 accuracy = self.accuracy(y_predicted, y_train)
                 print(f"epoch={epoch} loss={loss} accuracy={accuracy}")
-
+            """
 
     """ Predict in the form of onehot vector.
         
@@ -410,10 +534,14 @@ class MyMLPClassifier:
 
         y_probs = []
 
-        for i in range(X.shape[0]):
+        xshape = X.shape
+
+        for i in range(xshape[0]):
             xi = X[i]
+            xi = xi.reshape(1, -1)
             yi = self.predict_prob_one(xi)
-            y_probs.append(yi)
+            yi = yi.flatten()
+            y_probs.append(list(yi))
 
         y_probs = np.array(y_probs)
 
@@ -434,3 +562,21 @@ class MyMLPClassifier:
 
     def loss_history(self):
         return np.array(self.loss_hist)
+
+
+    """ Save model to a file
+    """
+
+    def save(self, modelfile):
+        raise NotImplemented
+        
+
+
+    """ Load model from a file
+    """
+
+    def load(self, modelfile):
+        raise NotImplemented
+
+
+
