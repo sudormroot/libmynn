@@ -61,6 +61,7 @@ class MyMLPCNNLayer:
                     learning_rate = 0.5, # learning rate
                     batch_size = 1, # batch size used for mini batch training
                     activation = 'sigmoid', # activation function
+                    alpha = 0.0001, #regularization factor
                     W = None, # Used for loading model from file
                     b = None, # Used for loading model from file
                     debug = False # debug flag
@@ -75,17 +76,19 @@ class MyMLPCNNLayer:
                         }
 
         # Check
-        assert activation in activations
+        # assert activation in activations
 
         # set activation function
-        self.f = activations[activation][0]
-        self.df = activations[activation][1]
+        if activation:
+            self.f = activations[activation][0]
+            self.df = activations[activation][1]
 
         self.name = name
         self.batch_size = batch_size
         self.n_input = n_input
         self.n_neurons = n_neurons
-        
+        self.alpha = alpha
+
         if random_seed > 0:
             np.random.seed(random_seed)
  
@@ -98,6 +101,10 @@ class MyMLPCNNLayer:
 
         self.W = np.random.uniform(-1, 1, (self.n_neurons, self.n_input))
         self.b = np.random.uniform(-1, 1, (self.n_neurons, 1))
+
+        #if self.name == 'input':
+        #    self.W = np.zeros((self.n_neurons, self.n_input))
+        #    self.b = np.zeros((self.n_neurons, 1))
 
         #self.W = np.random.normal(-0.5, 0.5, (self.n_neurons, self.n_input))
         #self.b = np.random.normal(0.5, 0.5, self.n_neurons)
@@ -124,6 +131,10 @@ class MyMLPCNNLayer:
 
     def forward(self, x):
 
+        #if self.name == "input":
+        #    print("x.shape=",x.shape)
+        #    return x
+
         # Keep a private copy
         self.x = x.copy()
 
@@ -142,6 +153,9 @@ class MyMLPCNNLayer:
     """
 
     def backward(self, grad):
+
+        #if self.name == 'input':
+        #    return grad
 
         # Keep a private copy of dL / dz
         dLdz = grad.copy()
@@ -162,6 +176,10 @@ class MyMLPCNNLayer:
         self.dW = dLdy.dot(self.x.T) / self.batch_size
 
         self.db = np.mean(dLdy, axis=1).reshape(-1, 1)
+
+        # regularisation terms
+        self.dW += self.alpha * self.W
+        self.db += self.alpha * self.b
 
         # Compute the output gradients for prior layer.
         #grad_next = dLdy.dot(self.W)
@@ -271,6 +289,7 @@ class MyMLPClassifier:
                                 batch_size = batch_size,
                                 random_seed = random_seed,
                                 activation = activation,
+                                alpha = alpha,
                                 debug = debug
                                 )
 
@@ -285,6 +304,7 @@ class MyMLPClassifier:
                                         batch_size = batch_size,
                                         random_seed = random_seed,
                                         activation = activation,
+                                        alpha = alpha,
                                         debug = debug
                                         )
             self.net.append(layer_hidden)
@@ -299,6 +319,7 @@ class MyMLPClassifier:
                                     batch_size = batch_size,
                                     random_seed = random_seed,
                                     activation = 'sigmoid', 
+                                    alpha = alpha,
                                     debug = debug
                                     )
 
@@ -352,16 +373,18 @@ class MyMLPClassifier:
     """ Regularization
     """
 
+    """
     def regularization(self):
-
+    
         r = 0.0
-
+    
         for layer in self.net:
             r += np.sum(np.abs(layer.W)) + np.sum(np.abs(layer.b))
 
         r *= self.alpha
 
         return r
+    """
 
     """ We use MSE loss
     """
@@ -455,7 +478,7 @@ class MyMLPClassifier:
 
                 # Compute the loss derivative value
                 #dloss = self.dMSELoss(y_predicted, y_truth)
-                dloss = self.dloss(y_predicted, y_truth) + self.regularization()
+                dloss = self.dloss(y_predicted, y_truth) #+ self.regularization()
                 
                 # Do backward propagation
                 self.backward_propagation(dloss)

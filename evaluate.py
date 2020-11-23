@@ -267,7 +267,8 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
                           hidden_layer_sizes = (7,), 
                           batch_size = 1,
                           #random_state = 1,
-                          max_iter = 101)
+                          max_iter = 101
+                          )
 
 
     clf.fit(X_train, y_train.T)
