@@ -310,7 +310,7 @@ def draw_loss(my_loss_hist, sk_loss_hist):
 
     fig = plt.figure(figsize = (fig_width, fig_height))
 
-    plt.plot(my_loss_hist, color = 'coral', label = 'My-MLPC')
+    plt.plot(my_loss_hist, color = 'coral', label = 'MY-MLPC')
     plt.plot(sk_loss_hist, color = 'turquoise', label = 'SK-MLPC')
 
     plt.xlabel("Iterations", fontsize = 12)
