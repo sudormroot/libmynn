@@ -267,6 +267,7 @@ class MyMLPClassifier:
         self.random_seed = random_seed
         self.debug = debug
         self.alpha = alpha
+        self.sorted_labels = [None] * self.n_output
 
         # Set loss function
         self.loss = loss_functions[loss][0]
@@ -357,6 +358,59 @@ class MyMLPClassifier:
         return z
 
 
+    """ Get train labels.
+
+    """
+    
+    def get_labels(self, y_train):
+
+        labels = list(y_train)
+        labels = list(set(labels))
+
+        sorted_labels = sorted(labels)
+
+        return sorted_labels
+
+
+    """ one-hot encoding
+
+    """
+
+    def one_hot_encode(self, label):
+
+        if label not in self.sorted_labels:
+            raise KeyError
+
+        idx = self.sorted_labels.index(label)
+
+        n_labels = len(self.sorted_labels)
+
+        I = np.eye(n_labels, dtype = np.double)
+
+        y = I[idx]
+
+        return list(y)
+
+
+    """ One-hot code decoding.
+
+    """
+
+    def one_hot_decode(self, y):
+
+        y = y.copy()
+        y = list(y)
+
+        if 1 in y:
+            idx = y.index(1)
+        else:
+            idx = 0
+
+        #print("idx=",idx)
+        return self.sorted_labels[idx]
+
+
+
     """ Print weights
     """
 
@@ -425,10 +479,26 @@ class MyMLPClassifier:
 
     def fit(self, X_train, y_train):
 
+        # Create labels
+        self.sorted_labels = self.get_labels(y_train)
+
+        if self.n_output > len(self.sorted_labels):
+            self.sorted_labels += [None] * (self.n_output - len(self.sorted_labels))
+
+        # one-hot encoding for labels
+        y_train_onehot = []
+        
+        for y in y_train:
+            y_onehot = self.one_hot_encode(y)
+            y_train_onehot.append(y_onehot)
+
+        y_train_onehot = np.array(y_train_onehot).T
+
+        # loss history.
         self.loss_hist = []
 
         # Checking input
-        assert X_train.shape[0] == y_train.shape[1]
+        assert X_train.shape[0] == y_train_onehot.shape[1]
 
         # mini batch SGD implementation
         for epoch in range(self.n_epochs):
@@ -462,23 +532,29 @@ class MyMLPClassifier:
             
                 # select a batch of samples
                 X = X_train[sel]
-                y_truth = y_train.T[sel].T
+                #y_truth = y_train.T[sel].T
+                y_truth_onehot = y_train_onehot.T[sel].T
+
+                #print(y_truth_onehot.T)
 
                 # Compute forward propagation data
-                y_predicted = self.forward_propagation(X)
+                y_predicted_onehot = self.forward_propagation(X)
+                #print(y_predicted_onehot)
+                
                 #y_predicted = self.predict_prob(X)
 
                 #print("y_predicted.shape=", y_predicted.shape)
 
                 # Compute loss
                 #loss = self.MSELoss(y_predicted, y_truth)
-                loss = self.loss(y_predicted, y_truth)
+                loss = self.loss(y_predicted_onehot, y_truth_onehot)
                 #print("loss=", loss)
+                
                 loss_hist.append(loss)
 
                 # Compute the loss derivative value
                 #dloss = self.dMSELoss(y_predicted, y_truth)
-                dloss = self.dloss(y_predicted, y_truth) #+ self.regularization()
+                dloss = self.dloss(y_predicted_onehot, y_truth_onehot) #+ self.regularization()
                 
                 # Do backward propagation
                 self.backward_propagation(dloss)
@@ -487,6 +563,8 @@ class MyMLPClassifier:
             # Compute average loss for each epoch
             avg_loss = np.mean(loss_hist)
             self.loss_hist.append(avg_loss)
+
+            # self.debug = True
 
             # Print accuracy for each 10 epochs
             if epoch % 10 == 0 and self.debug == True:
@@ -544,9 +622,16 @@ class MyMLPClassifier:
 
         y = np.where(y_probs >= self.threshold, 1, 0)
 
-        y = y.T
+        y_labels = []
 
-        return y
+        for yi in y:
+            label = self.one_hot_decode(yi)
+            y_labels.append(label)
+
+        y_labels = np.array(y_labels)
+        y_labels = y_labels.flatten()
+
+        return y_labels
 
 
     """ Return the probabilities/scores of X

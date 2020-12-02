@@ -28,38 +28,6 @@ N = 10
 
 
 
-""" A implementation of one-hot coding.
-    
-    INPUTS:
-        labels: The list of labels
-        name:   The label name for encoding
-
-    RETURNS:
-        The encoded one-hot code.
-
-"""
-
-def one_hot_encode(labels, name):
-
-    sorted_labels = labels.copy()
-
-    sorted_labels = list(sorted_labels)
-
-    sorted_labels = sorted(sorted_labels)
-
-    if name not in sorted_labels:
-        raise KeyError
-
-    idx = sorted_labels.index(name)
-
-    n_labels = len(sorted_labels)
-
-    I = np.eye(n_labels, dtype = np.double)
-
-    y = I[idx]
-
-    return list(y)
-
 
 """ Load beer data set as DataFrame
 
@@ -124,25 +92,11 @@ def prepare_beer_dataset(txtfile):
 
     # The columns for label (y)
     y_name = 'style'
+    #y_name_onehot = 'style_onehot'
 
     # We normalise the dataset
     normalise_data(df_dataset, x_names)
 
-    # Prepare label set for one-hot coding.
-    y_labels = list(df_dataset[y_name])
-    y_labels = list(set(y_labels))
-
-
-    #
-    # Convert y labels to onehot coding.
-    #
-    y_onehot = [] 
-    
-    for i, label in enumerate(df_dataset[y_name]):
-        onehot = one_hot_encode(y_labels, label)
-        y_onehot.append(onehot)
-
-    df_dataset[y_name] = y_onehot
 
     return df_dataset
 
@@ -154,13 +108,13 @@ def prepare_beer_dataset(txtfile):
         X_train, y_train, X_test, y_test
 """
 
-def split_dataset(df):
+def split_dataset(df, y_name):
 
     # The columns for input (X)
     x_names = ["calorific_value", "nitrogen", "turbidity", "alcohol", "sugars", "bitterness", "beer_id", "colour", "degree_of_fermentation"]
 
     # The columns for label (y)
-    y_name = 'style'
+    #y_name = 'style'
 
     # reshuffle the dataset
     df = df.sample(frac = 1) 
@@ -218,7 +172,8 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
     #print("----------- Evaluation of my MLPC algorithm -----------")
 
     n_input = X_train.shape[1]
-    n_output = y_train.shape[0]
+    #n_output = y_train.shape[0]
+    n_output = len(set(y_train))
 
     clf = MyMLPClassifier( n_input = n_input, 
                         n_output = n_output, 
@@ -230,15 +185,17 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
                         alpha = 0.0001,
                         #random_seed = 1,
                         activation = 'relu',
-                        debug = False)
+                        debug = True)
 
-
+    
     clf.fit(X_train, y_train)
 
     # for debug purposes
     # clf.print_weights()
 
     y_predicted = clf.predict(X_test)
+    
+
     test_accuracy = prediction_accuracy(y_predicted, y_test)
     #print("Testing data set accuracy: ", accuracy)
 
@@ -246,6 +203,17 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
     train_accuracy = prediction_accuracy(y_predicted, y_train)
     #print("Training data set accuracy: ", accuracy)
 
+    # we are required to log the prediction into a file
+    f = open("results" + os.path.sep + "mymlpc_prediction.txt", "at")
+    f.write("\n")
+    f.write(f"y_test={y_test}\n")
+    f.write("\n")
+    f.write(f"y_predicted={y_predicted}\n")
+    f.write("\n")
+    f.write(f"test_accuracy={test_accuracy:.2f}\n")
+    f.write(f"train_accuracy={train_accuracy:.2f}\n")
+    f.write("\n")
+    f.close()
 
     #print("----------- Finished -----------")
 
@@ -429,6 +397,10 @@ if __name__ == '__main__':
 
     df = prepare_beer_dataset('beer.txt')
     
+    # used for one-hot decoding
+    #y_labels = list(df[y_name])
+    #y_labels = list(set(y_labels))
+
     my_test_accs = []
     my_train_accs = []
     
@@ -443,7 +415,7 @@ if __name__ == '__main__':
         
         #print(f"--- {i} ---")
 
-        X_train, y_train, X_test, y_test = split_dataset(df)
+        X_train, y_train, X_test, y_test = split_dataset(df, "style")
 
         # We evaluate our MLPC first.
         myclf, train_acc, test_acc = evaluate_mymlpc(X_train, y_train, X_test, y_test)
