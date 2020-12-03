@@ -52,6 +52,25 @@ class MyMLPCNNLayer:
     def drelu(self, x):
         return 1. * (x > 0)
 
+    def init_weights(self):
+
+        """ Notice!
+            We should use Gaussian distribution to initialise the W matrix and b vector,
+            otherwise the algorithm isn't stable of coverging.
+        """
+
+        self.W = np.random.uniform(-1, 1, (self.n_neurons, self.n_input))
+        self.b = np.random.uniform(-1, 1, (self.n_neurons, 1))
+
+        #if self.name == 'input':
+        #    self.W = np.zeros((self.n_neurons, self.n_input))
+        #    self.b = np.zeros((self.n_neurons, 1))
+
+        #self.W = np.random.normal(-0.5, 0.5, (self.n_neurons, self.n_input))
+        #self.b = np.random.normal(0.5, 0.5, self.n_neurons)
+
+
+
     def __init__(   self, 
                     *, 
                     name, # the name of this layer
@@ -92,26 +111,16 @@ class MyMLPCNNLayer:
         if random_seed > 0:
             np.random.seed(random_seed)
  
+        self.W = None
+        self.b = None
+
+        self.init_weights()
+
         self.debug = debug
-
-        """ Notice!
-            We should use Gaussian distribution to initialise the W matrix and b vector,
-            otherwise the algorithm isn't stable of coverging.
-        """
-
-        self.W = np.random.uniform(-1, 1, (self.n_neurons, self.n_input))
-        self.b = np.random.uniform(-1, 1, (self.n_neurons, 1))
-
-        #if self.name == 'input':
-        #    self.W = np.zeros((self.n_neurons, self.n_input))
-        #    self.b = np.zeros((self.n_neurons, 1))
-
-        #self.W = np.random.normal(-0.5, 0.5, (self.n_neurons, self.n_input))
-        #self.b = np.random.normal(0.5, 0.5, self.n_neurons)
-
         # x is the input from prior layer.
         # y = wx + b
         # z = f(y)
+
         self.x = None 
         self.y = None
         self.z = None
@@ -119,7 +128,6 @@ class MyMLPCNNLayer:
         # The gradients of W and b
         self.dW = None
         self.db = None
-
 
 
     """ forward propagation implementation for one layer.
@@ -330,6 +338,13 @@ class MyMLPClassifier:
 
         self.net.append(layer_output)
 
+    """ Initialize weights again.
+
+    """
+
+    def init_weights(self):
+        for layer in self.net:
+            layer.init_weights()
 
     """ Backward propagation for all layers.
         
@@ -482,6 +497,8 @@ class MyMLPClassifier:
     """
 
     def fit(self, X_train, y_train):
+
+        self.init_weights()
 
         # Create labels
         self.sorted_labels = self.get_labels(y_train)
