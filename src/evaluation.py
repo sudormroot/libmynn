@@ -160,6 +160,62 @@ def split_dataset(df, y_name):
 def prediction_accuracy(y_predicted, y_truth):
     return np.mean(y_predicted == y_truth)
 
+
+""" Test for saving and loading model
+
+"""
+def test_load_and_save_model(X_train, y_train, X_test, y_test):
+
+    print("Training a model ...")
+
+    n_input = X_train.shape[1]
+    n_output = len(set(y_train))
+
+    clf1 = MyMLPClassifier( n_input = n_input, 
+                        n_output = n_output, 
+                        hidden_sizes = (7,), #define hidden layers
+                        learning_rate = 0.001, 
+                        n_epochs = 101, 
+                        batch_size = 1,
+                        alpha = 0.0001,
+                        #random_seed = 1,
+                        activation = 'relu',
+                        debug = True)
+
+    
+    clf1.fit(X_train, y_train)
+    y_predicted = clf1.predict(X_test)
+
+    test_accuracy = prediction_accuracy(y_predicted, y_test)
+
+    y_predicted = clf1.predict(X_train)
+    train_accuracy = prediction_accuracy(y_predicted, y_train)
+
+    print("Testing data set accuracy: ", test_accuracy)
+    print("Training data set accuracy: ", train_accuracy)
+
+    modelfile = "results" + os.path.sep + "mymlpc.model"
+
+    # save model
+    clf1.save(modelfile)
+
+    print("")
+    print("Loading model from file ...")
+    clf2 = MyMLPClassifier(modelfile = modelfile)
+
+    y_predicted = clf2.predict(X_test)
+
+    test_accuracy = prediction_accuracy(y_predicted, y_test)
+
+    y_predicted = clf2.predict(X_train)
+    train_accuracy = prediction_accuracy(y_predicted, y_train)
+
+    print("Testing data set accuracy: ", test_accuracy)
+    print("Training data set accuracy: ", train_accuracy)
+
+
+
+
 """ The evaluation function of my MLPC
 
 """
@@ -185,6 +241,7 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
 
     
     clf.fit(X_train, y_train)
+
 
     # for debug purposes
     # clf.print_weights()

@@ -15,7 +15,7 @@ The training uses SGD with batch size by 1.
 
 
 import numpy as np
-
+import pickle 
 
 """ We implement a NN layer here.
 
@@ -52,12 +52,8 @@ class MyMLPCNNLayer:
     def drelu(self, x):
         return 1. * (x > 0)
 
+    # used for initializing weights.
     def init_weights(self):
-
-        """ Notice!
-            We should use Gaussian distribution to initialise the W matrix and b vector,
-            otherwise the algorithm isn't stable of coverging.
-        """
 
         self.W = np.random.uniform(-1, 1, (self.n_neurons, self.n_input))
         self.b = np.random.uniform(-1, 1, (self.n_neurons, 1))
@@ -66,10 +62,14 @@ class MyMLPCNNLayer:
         #    self.W = np.zeros((self.n_neurons, self.n_input))
         #    self.b = np.zeros((self.n_neurons, 1))
 
+        #Gaussian distribution
         #self.W = np.random.normal(-0.5, 0.5, (self.n_neurons, self.n_input))
         #self.b = np.random.normal(0.5, 0.5, self.n_neurons)
 
-
+    # used for loading model from file.
+    #def set_weights(self, W, b):
+    #    self.W = W
+    #    self.b = b
 
     def __init__(   self, 
                     *, 
@@ -220,8 +220,8 @@ class MyMLPClassifier:
     def __init__(   self, 
                     *, 
                     modelfile = None, # Load a model from given filename
-                    n_input, # The dimension of inputs
-                    n_output, # The dimension of output
+                    n_input = None, # The dimension of inputs
+                    n_output = None, # The dimension of output
                     hidden_sizes = (13, 13), #hidden layer sizes
                     learning_rate = 0.005, # The learning rate
                     batch_size = 200, # The batch size for mini batch training
@@ -235,48 +235,46 @@ class MyMLPClassifier:
                     ):
 
 
-        """ Checking if we need to load a model from file
-        """
-
-        if modelfile:
-            # We load existing model from a file here.
-            raise NotImplemented
-            return
-
-
-        """ Otherwise, we create a new model from parameters
-
-        """
 
         loss_functions = {
                             'MSE':(self.MSELoss, self.dMSELoss)
                         }
 
-        # Check parameters
-        assert n_epochs >= 1
-        assert threshold > 0.
-        assert n_input >= 1
-        assert n_output >= 1
-        assert len(hidden_sizes) >= 1
-        assert learning_rate >= 0.
-        assert batch_size >= 1
-        assert loss in loss_functions
-        assert alpha >= 0.
-
         # We keep the parameters here for later uses.
-        self.batch_size = batch_size
-        self.n_epochs = n_epochs
-        self.threshold = threshold
-        self.n_input = n_input
-        self.n_output = n_output
-        self.n_hiddens = len(hidden_sizes)
-        self.hidden_sizes = hidden_sizes
-        self.learning_rate = learning_rate
-        self.activation = activation
-        self.random_seed = random_seed
-        self.debug = debug
-        self.alpha = alpha
-        self.sorted_labels = [None] * self.n_output
+        self.model = {}
+
+        # Not to load model from a file
+        if not modelfile:
+            self.model['batch_size'] = batch_size
+            self.model['n_epochs'] = n_epochs
+            self.model['threshold'] = threshold
+            self.model['n_input'] = n_input
+            self.model['n_output'] = n_output
+            self.model['hidden_sizes'] = hidden_sizes
+            self.model['learning_rate'] = learning_rate
+            self.model['activation'] = activation
+            self.model['random_seed'] = random_seed
+            self.model['debug'] = debug
+            self.model['alpha'] = alpha
+            self.model['sorted_labels'] = [None] * self.model['n_output']
+            self.model['loss'] = loss
+            self.model['sorted_labels'] = []
+            self.model['weights'] = []
+        else:
+            self.load(modelfile)
+            loss = self.model['loss']
+
+
+        # Check parameters
+        assert self.model['n_epochs'] >= 1
+        assert self.model['threshold'] > 0.
+        assert self.model['n_input'] >= 1
+        assert self.model['n_output'] >= 1
+        assert len(self.model['hidden_sizes']) >= 1
+        assert self.model['learning_rate'] >= 0.
+        assert self.model['batch_size'] >= 1
+        assert self.model['loss'] in loss_functions
+        assert self.model['alpha'] >= 0.
 
         # Set loss function
         self.loss = loss_functions[loss][0]
@@ -294,33 +292,33 @@ class MyMLPClassifier:
         # The input layer
         layer_input = MyMLPCNNLayer( 
                                 name = "input", 
-                                n_input = n_input, 
-                                n_neurons = self.hidden_sizes[0], 
-                                batch_size = batch_size,
-                                random_seed = random_seed,
-                                activation = activation,
-                                alpha = alpha,
-                                debug = debug
+                                n_input = self.model['n_input'], #n_input, 
+                                n_neurons = self.model['hidden_sizes'][0], 
+                                batch_size = self.model['batch_size'], #batch_size,
+                                random_seed = self.model['random_seed'],
+                                activation = self.model['activation'],
+                                alpha = self.model['alpha'],
+                                debug = self.model['debug']
                                 )
 
         self.net.append(layer_input)
         
-        n_neurons = self.hidden_sizes[0]
+        n_neurons = self.model['hidden_sizes'][0]
 
         # Hidden layers
-        for i in range(self.n_hiddens):
+        for i in range(len(self.model['hidden_sizes'])):
             layer_hidden = MyMLPCNNLayer(    
                                         name = f"hidden_{i}", 
                                         n_input = n_neurons, 
-                                        n_neurons = self.hidden_sizes[i],
-                                        batch_size = batch_size,
-                                        random_seed = random_seed,
-                                        activation = activation,
-                                        alpha = alpha,
-                                        debug = debug
+                                        n_neurons = self.model['hidden_sizes'][i],
+                                        batch_size = self.model['batch_size'], #batch_size,
+                                        random_seed = self.model['random_seed'],
+                                        activation = self.model['activation'],
+                                        alpha = self.model['alpha'],
+                                        debug = self.model['debug']
                                         )
             
-            n_neurons = self.hidden_sizes[i]
+            n_neurons = self.model['hidden_sizes'][i]
 
             self.net.append(layer_hidden)
 
@@ -329,16 +327,24 @@ class MyMLPClassifier:
         # We use sigmoid activation for last layer to score into [0, 1]
         layer_output = MyMLPCNNLayer(    
                                     name = "output", 
-                                    n_input = self.hidden_sizes[-1], 
-                                    n_neurons = n_output, 
-                                    batch_size = batch_size,
-                                    random_seed = random_seed,
+                                    n_input = self.model['hidden_sizes'][-1], 
+                                    n_neurons = self.model['n_output'], 
+                                    batch_size = self.model['batch_size'], #batch_size,
+                                    random_seed = self.model['random_seed'],
                                     activation = 'sigmoid', 
-                                    alpha = alpha,
-                                    debug = debug
+                                    alpha = self.model['alpha'],
+                                    debug = self.model['debug']
                                     )
 
         self.net.append(layer_output)
+
+        # set weights if loading from file
+        if modelfile:
+            for (W, b), layer in zip(self.model['weights'], self.net):
+                #layer.set_weights(W, b)
+                layer.W = W
+                layer.b = b
+
 
     """ Initialize weights again.
 
@@ -399,12 +405,12 @@ class MyMLPClassifier:
 
     def one_hot_encode(self, label):
 
-        if label not in self.sorted_labels:
+        if label not in self.model['sorted_labels']:
             raise KeyError
 
-        idx = self.sorted_labels.index(label)
+        idx = self.model['sorted_labels'].index(label)
 
-        n_labels = len(self.sorted_labels)
+        n_labels = len(self.model['sorted_labels'])
 
         I = np.eye(n_labels, dtype = np.double)
 
@@ -428,7 +434,7 @@ class MyMLPClassifier:
             idx = 0
 
         #print("idx=",idx)
-        return self.sorted_labels[idx]
+        return self.model['sorted_labels'][idx]
 
 
 
@@ -490,6 +496,9 @@ class MyMLPClassifier:
     def accuracy(self, y_predicted, y_truth):
         return np.mean(y_predicted == y_truth)
 
+
+    
+
     """ Training our neural networks.
         We implement a naive SGD (Stochastic Gradient Descending) algorithm here.
         
@@ -504,10 +513,10 @@ class MyMLPClassifier:
         self.init_weights()
 
         # Create labels
-        self.sorted_labels = self.get_labels(y_train)
+        self.model['sorted_labels'] = self.get_labels(y_train)
 
-        if self.n_output > len(self.sorted_labels):
-            self.sorted_labels += [None] * (self.n_output - len(self.sorted_labels))
+        if self.model['n_output'] > len(self.model['sorted_labels']):
+            self.model['sorted_labels'] += [None] * (self.model['n_output'] - len(self.model['sorted_labels']))
 
         # one-hot encoding for labels
         y_train_onehot = []
@@ -525,15 +534,16 @@ class MyMLPClassifier:
         assert X_train.shape[0] == y_train_onehot.shape[1]
 
         # mini batch SGD implementation
-        for epoch in range(self.n_epochs):
+        #for epoch in range(self.n_epochs):
+        for epoch in range(self.model['n_epochs']):
  
             xshape = X_train.shape
 
             n_samples = xshape[0]
 
             # Check batch size
-            self.batch_size = min(self.batch_size, n_samples)
-            assert self.batch_size >= 1
+            self.batch_size = min(self.model['batch_size'], n_samples)
+            assert self.model['batch_size'] >= 1
 
             indices = np.arange(n_samples)
 
@@ -549,8 +559,8 @@ class MyMLPClassifier:
             loss_hist = []
 
             # Train with a batch size
-            for start_idx in range(0, n_samples - self.batch_size + 1, self.batch_size):
-                end_idx = min(start_idx + self.batch_size, xshape[0])
+            for start_idx in range(0, n_samples - self.model['batch_size'] + 1, self.model['batch_size']):
+                end_idx = min(start_idx + self.model['batch_size'], xshape[0])
 
                 sel = indices[start_idx:end_idx]
             
@@ -588,10 +598,10 @@ class MyMLPClassifier:
             avg_loss = np.mean(loss_hist)
             self.loss_hist.append(avg_loss)
 
-            # self.debug = True
+            # self.model['debug'] = True
 
             # Print accuracy for each 10 epochs
-            if epoch % 10 == 0 and self.debug == True:
+            if epoch % 10 == 0 and self.model['debug'] == True:
                 y_predicted = self.predict(X_train)
                 accuracy = self.accuracy(y_predicted, y_train)
                 print(f"epoch={epoch} loss={loss} accuracy={accuracy}")
@@ -644,7 +654,7 @@ class MyMLPClassifier:
 
         y_probs = y_probs.T
 
-        y = np.where(y_probs >= self.threshold, 1, 0)
+        y = np.where(y_probs >= self.model['threshold'], 1, 0)
 
         y_labels = []
 
@@ -700,15 +710,26 @@ class MyMLPClassifier:
     """
 
     def save(self, modelfile):
-        raise NotImplemented
+
+        print("Saving model: ", modelfile)
         
+        self.model['weights'] = []
+
+        for layer in self.net:
+            weights = (layer.W, layer.b)
+            self.model['weights'].append(weights)
+
+        pickle.dump(self.model, open(modelfile, "wb" ))
+ 
 
 
     """ Load model from a file
     """
 
     def load(self, modelfile):
-        raise NotImplemented
+        
+        print("Loading model: ", modelfile)
 
+        self.model = pickle.load(open(modelfile, "rb" ))
 
 

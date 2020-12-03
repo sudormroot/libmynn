@@ -30,6 +30,7 @@ from evaluation import evaluate_skmlpc
 from evaluation import print_results
 from evaluation import save_results
 from evaluation import draw_loss
+from evaluation import test_load_and_save_model
 
 
 # We run 10 times to measure the accuracy
@@ -50,6 +51,28 @@ if __name__ == '__main__':
 
     df = prepare_beer_dataset(dataset_path)
     
+
+    #
+    # test saving and loading model to/from file
+    #
+    print("")
+    print("")
+    print("Evaluating for saving and loading model ...")
+    print("")
+    X_train, y_train, X_test, y_test = split_dataset(df, "style")
+    test_load_and_save_model(X_train, y_train, X_test, y_test)
+    print("")
+
+
+    #
+    # Comparing our classifier and sklearn baseline
+    #
+    print("")
+    print("")
+    print("Evaluating performance and comparing with sk-learn MLPC baseline classifier ...")
+    print("")
+    print("")
+
     my_test_accs = []
     my_train_accs = []
     
