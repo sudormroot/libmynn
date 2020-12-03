@@ -281,7 +281,9 @@ def draw_loss(my_loss_hist, sk_loss_hist):
     plt.xlabel("Iterations", fontsize = 12)
     plt.ylabel("Normalized Loss", fontsize = 12)
 
-    plt.xlim(0, len(loss_hist) - 1)
+    assert len(my_loss_hist) == len(sk_loss_hist)
+
+    plt.xlim(0, len(my_loss_hist) - 1)
     plt.ylim(0, 1)
 
     plt.legend( loc = 'upper center',
