@@ -117,6 +117,8 @@ class MyMLPCNNLayer:
         self.init_weights()
 
         self.debug = debug
+
+
         # x is the input from prior layer.
         # y = wx + b
         # z = f(y)
@@ -497,7 +499,8 @@ class MyMLPClassifier:
     """
 
     def fit(self, X_train, y_train):
-
+        
+        # Re-initialize weights again.
         self.init_weights()
 
         # Create labels
