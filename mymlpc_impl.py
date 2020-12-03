@@ -212,10 +212,8 @@ class MyMLPClassifier:
                     modelfile = None, # Load a model from given filename
                     n_input, # The dimension of inputs
                     n_output, # The dimension of output
-                    #n_neurons = 7, # The number of neurons
-                    hidden_sizes = (7), #hidden layer sizes
-                    #n_hiddens = 3, # The number of hidden layers
-                    learning_rate = 0.5, # The learning rate
+                    hidden_sizes = (13, 13), #hidden layer sizes
+                    learning_rate = 0.005, # The learning rate
                     batch_size = 200, # The batch size for mini batch training
                     n_epochs = 30,  # The number of epochs
                     threshold = 0.5, # The threshold for prediction
@@ -287,7 +285,7 @@ class MyMLPClassifier:
         layer_input = MyMLPCNNLayer( 
                                 name = "input", 
                                 n_input = n_input, 
-                                n_neurons = self.hidden_sizes[0], #n_neurons, 
+                                n_neurons = self.hidden_sizes[0], 
                                 batch_size = batch_size,
                                 random_seed = random_seed,
                                 activation = activation,
@@ -304,7 +302,7 @@ class MyMLPClassifier:
             layer_hidden = MyMLPCNNLayer(    
                                         name = f"hidden_{i}", 
                                         n_input = n_neurons, 
-                                        n_neurons = self.hidden_sizes[i], #n_neurons, 
+                                        n_neurons = self.hidden_sizes[i],
                                         batch_size = batch_size,
                                         random_seed = random_seed,
                                         activation = activation,
@@ -321,7 +319,7 @@ class MyMLPClassifier:
         # We use sigmoid activation for last layer to score into [0, 1]
         layer_output = MyMLPCNNLayer(    
                                     name = "output", 
-                                    n_input = self.hidden_sizes[-1], #n_neurons, 
+                                    n_input = self.hidden_sizes[-1], 
                                     n_neurons = n_output, 
                                     batch_size = batch_size,
                                     random_seed = random_seed,

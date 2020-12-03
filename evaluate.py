@@ -172,7 +172,6 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
     #print("----------- Evaluation of my MLPC algorithm -----------")
 
     n_input = X_train.shape[1]
-    #n_output = y_train.shape[0]
     n_output = len(set(y_train))
 
     clf = MyMLPClassifier( n_input = n_input, 
