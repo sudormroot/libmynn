@@ -177,8 +177,7 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
 
     clf = MyMLPClassifier( n_input = n_input, 
                         n_output = n_output, 
-                        n_hiddens = 1, 
-                        n_neurons = 7, 
+                        hidden_sizes = (7,), #define hidden layers
                         learning_rate = 0.001, 
                         n_epochs = 101, 
                         batch_size = 1,
