@@ -23,8 +23,6 @@ import os
 from mymlpc_impl import MyMLPClassifier
 
 
-# We run 10 times to measure the accuracy
-N = 10
 
 
 
@@ -201,6 +199,7 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
     train_accuracy = prediction_accuracy(y_predicted, y_train)
     #print("Training data set accuracy: ", accuracy)
 
+    
     # we are required to log the prediction into a file
     f = open("results" + os.path.sep + "mymlpc_prediction.txt", "at")
     f.write("\n")
@@ -386,94 +385,5 @@ def save_results(results):
     f.close()
 
 
-
-
-""" We start evaluation here.
-"""
-
-if __name__ == '__main__':
-
-    df = prepare_beer_dataset('beer.txt')
-    
-    # used for one-hot decoding
-    #y_labels = list(df[y_name])
-    #y_labels = list(set(y_labels))
-
-    my_test_accs = []
-    my_train_accs = []
-    
-    sk_test_accs = []
-    sk_train_accs = []
-    
-    my_loss_hists = []
-    sk_loss_hists = []
-
-
-    for i in range(N):
-        
-        #print(f"--- {i} ---")
-
-        X_train, y_train, X_test, y_test = split_dataset(df, "style")
-
-        # We evaluate our MLPC first.
-        myclf, train_acc, test_acc = evaluate_mymlpc(X_train, y_train, X_test, y_test)
-
-        my_train_accs.append(train_acc)
-        my_test_accs.append(test_acc)
-
-        # Retrieve the loss history.
-        loss_hist = myclf.loss_history()
-        my_loss_hists.append(loss_hist)
-
-        # We evaluate the sklearn MLPC.
-        skclf, train_acc, test_acc = evaluate_skmlpc(X_train, y_train, X_test, y_test)
-        
-        sk_train_accs.append(train_acc)
-        sk_test_accs.append(test_acc)
-
-        loss_hist = skclf.loss_curve_
-        sk_loss_hists.append(loss_hist)
-
-
-    #
-    # Compute the mean and std of accuracies on training and testing datasets
-    #
-
-    results = {}
-
-
-    results["mymlpc"] = {}
-    results["skmlpc"] = {}
-
-    results["mymlpc"]["test_accs"] = my_test_accs
-    results["mymlpc"]["train_accs"] = my_train_accs
-
-    results["skmlpc"]["test_accs"] = sk_test_accs
-    results["skmlpc"]["train_accs"] = sk_train_accs
-
-
-    results["mymlpc"]["test_mean"] = np.mean(my_test_accs)
-    results["mymlpc"]["test_std"] = np.std(my_test_accs)
-
-    results["mymlpc"]["train_mean"] = np.mean(my_train_accs)
-    results["mymlpc"]["train_std"] = np.std(my_train_accs)
-
-    results["skmlpc"]["test_mean"] = np.mean(sk_test_accs)
-    results["skmlpc"]["test_std"] = np.std(sk_test_accs)
-
-    results["skmlpc"]["train_mean"] = np.mean(sk_train_accs)
-    results["skmlpc"]["train_std"] = np.std(sk_train_accs)
-
-    # Compute mean loss for all runs.
-    my_loss_hists = np.array(my_loss_hists)
-    my_loss_hist = np.mean(my_loss_hists, axis = 0)
-
-    sk_loss_hists = np.array(sk_loss_hists)
-    sk_loss_hist = np.mean(sk_loss_hists, axis = 0)
-
-    # present results
-    print_results(results)
-    save_results(results)
-    draw_loss(my_loss_hist, sk_loss_hist)
 
 
