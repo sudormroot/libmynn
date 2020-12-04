@@ -194,7 +194,7 @@ def test_load_and_save_model(X_train, y_train, X_test, y_test):
     print("Testing data set accuracy: ", test_accuracy)
     print("Training data set accuracy: ", train_accuracy)
 
-    modelfile = "results" + os.path.sep + "mymlpc.model"
+    modelfile = "results" + os.path.sep + "beer_mymlpc.model"
 
     # save model
     clf1.save(modelfile)
