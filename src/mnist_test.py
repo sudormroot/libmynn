@@ -57,7 +57,7 @@ clf = MyMLPClassifier( n_input = N_IMAGE_PIXELS,
                        n_output = N_LABELS, 
                        hidden_sizes = (28, 28), #define hidden layers
                        learning_rate = 0.001, 
-                       n_epochs = 1000, 
+                       n_epochs = 10, 
                        batch_size = 8,
                        alpha = 0.0001,
                        #random_seed = 1,
@@ -70,7 +70,12 @@ clf = MyMLPClassifier( n_input = N_IMAGE_PIXELS,
 clf.fit(train_imgs, train_labels)
 
 
-modelfile = "results" + os.path.sep + "handwriting_mymlpc.model"
+resultdir = "results"
+
+modelfile = resultdir + os.path.sep + "handwriting_mymlpc.model"
+
+if not os.path.exists(resultdir):
+    os.makedirs(resultdir)
 
 # save model
 clf.save(modelfile)
