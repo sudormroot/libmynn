@@ -400,12 +400,9 @@ class MyMLPClassifier:
     """
     
     def get_labels(self, y_train):
-
         labels = list(y_train)
         labels = list(set(labels))
-
         sorted_labels = sorted(labels)
-
         return sorted_labels
 
 

@@ -5,3 +5,5 @@ result.txt
 results
 results/results.txt
 results/*.pdf
+dataset/mnist_train.csv
+dataset/mnist_test.csv
