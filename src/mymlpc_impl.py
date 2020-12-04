@@ -15,6 +15,7 @@ The training uses SGD with batch size by 1.
 
 
 import numpy as np
+import random
 import pickle 
 
 """ We implement a NN layer here.
@@ -240,11 +241,22 @@ class MyMLPClassifier:
                             'MSE':(self.MSELoss, self.dMSELoss)
                         }
 
+        self.signature = __class__.__name__ 
+
         # We keep the parameters here for later uses.
         self.model = {}
 
-        # Not to load model from a file
-        if not modelfile:
+        if modelfile:
+            # load model from a file
+            self.load(modelfile)
+            loss = self.model['loss']
+            # check signature
+            if self.model['signature'] != self.signature:
+                print("model['signature']: ", model['signature'], " not machined with signature: ", self.signature)
+                raise ValueError
+        else:
+            # initialize a new model
+            self.model['signature'] = self.signature
             self.model['batch_size'] = batch_size
             self.model['n_epochs'] = n_epochs
             self.model['threshold'] = threshold
@@ -258,11 +270,9 @@ class MyMLPClassifier:
             self.model['alpha'] = alpha
             self.model['sorted_labels'] = [None] * self.model['n_output']
             self.model['loss'] = loss
-            self.model['sorted_labels'] = []
             self.model['weights'] = []
-        else:
-            self.load(modelfile)
-            loss = self.model['loss']
+            self.model['onehot_to_label'] = {}
+            self.model['label_to_onehot'] = {}
 
 
         # Check parameters
@@ -399,44 +409,6 @@ class MyMLPClassifier:
         return sorted_labels
 
 
-    """ one-hot encoding
-
-    """
-
-    def one_hot_encode(self, label):
-
-        if label not in self.model['sorted_labels']:
-            raise KeyError
-
-        idx = self.model['sorted_labels'].index(label)
-
-        n_labels = len(self.model['sorted_labels'])
-
-        I = np.eye(n_labels, dtype = np.double)
-
-        y = I[idx]
-
-        return list(y)
-
-
-    """ One-hot code decoding.
-
-    """
-
-    def one_hot_decode(self, y):
-
-        y = y.copy()
-        y = list(y)
-
-        if 1 in y:
-            idx = y.index(1)
-        else:
-            idx = 0
-
-        #print("idx=",idx)
-        return self.model['sorted_labels'][idx]
-
-
 
     """ Print weights
     """
@@ -518,13 +490,19 @@ class MyMLPClassifier:
         if self.model['n_output'] > len(self.model['sorted_labels']):
             self.model['sorted_labels'] += [None] * (self.model['n_output'] - len(self.model['sorted_labels']))
 
-        # one-hot encoding for labels
-        y_train_onehot = []
-        
-        for y in y_train:
-            y_onehot = self.one_hot_encode(y)
-            y_train_onehot.append(y_onehot)
 
+        # label-to-onehot
+        n_labels = len(self.model['sorted_labels'])
+        onehot_I = np.eye(n_labels, dtype = np.double)
+        self.model['label_to_onehot'] = {k:tuple(onehot_I[i]) for i, k in enumerate(self.model['sorted_labels'])}
+        #print(self.model['label_to_onehot'].items())
+
+        # onehot-to-label
+        self.model['onehot_to_label'] = {v:k for k,v in self.model['label_to_onehot'].items()}
+        #print(self.model['onehot_to_label'])
+
+        # one-hot encoding for labels
+        y_train_onehot = [list(self.model['label_to_onehot'][y]) for y in y_train]
         y_train_onehot = np.array(y_train_onehot).T
 
         # loss history.
@@ -659,7 +637,11 @@ class MyMLPClassifier:
         y_labels = []
 
         for yi in y:
-            label = self.one_hot_decode(yi)
+            #decode onehot to label
+            if tuple(yi) in self.model['onehot_to_label']:
+                label = self.model['onehot_to_label'][tuple(yi)]
+            else:
+                label = random.choice(list(self.model['onehot_to_label'].values()))
             y_labels.append(label)
 
         y_labels = np.array(y_labels)
