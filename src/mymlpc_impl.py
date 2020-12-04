@@ -59,6 +59,7 @@ class MyMLPCNNLayer:
         self.W = np.random.uniform(-1, 1, (self.n_neurons, self.n_input))
         self.b = np.random.uniform(-1, 1, (self.n_neurons, 1))
 
+        # normalize weights again to prevent overflow errors for exp().
         self.W = self.W / self.n_neurons
         self.b = self.b / self.n_neurons
 
