@@ -480,10 +480,11 @@ class MyMLPClassifier:
 
     """
 
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, reset_weights = True):
         
         # Re-initialize weights again.
-        self.init_weights()
+        if reset_weights:
+            self.init_weights()
 
         # Create labels
         self.model['sorted_labels'] = self.get_labels(y_train)
