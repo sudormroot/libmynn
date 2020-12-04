@@ -1,0 +1,15 @@
+Changelog by December 4, 2020:
+ 
+ 1. Model persistence is implemented, we can now save model to disk or load model from disk.
+ 
+ 2. Onehot encoding/decoding algorithms are optimized, the speed is supposed to be faster.
+ 
+ 3. Min-batching is optimized.
+ 
+ 4. SGD is optimized.
+ 
+ 5. Fixed a bug in training, we should re-initialize weights when we re-train, otherwise the previous weights will affect our results.
+ 
+ 6. Fixed a bug when loading model from disk, we compare its signature to guarantee the content is compatible and correct with current version and class.
+ 
+ 7. More activation functions (sigmoid, tanh and relu) are supported.
