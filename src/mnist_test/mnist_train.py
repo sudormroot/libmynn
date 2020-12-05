@@ -31,7 +31,7 @@ clf = MyMLPClassifier( n_input = N_IMAGE_PIXELS,
                        n_output = N_LABELS, 
                        hidden_sizes = (28, 16), #define hidden layers
                        learning_rate = 0.001, 
-                       n_epochs = 100, 
+                       n_epochs = 10, 
                        batch_size = 16,
                        alpha = 0.001,
                        #random_seed = 1,
@@ -56,7 +56,7 @@ y_predicted = clf.predict(X_test)
 test_accuracy = prediction_accuracy(y_predicted, y_test)
 print("Testing data set accuracy: ", test_accuracy)
 
-y_predicted = clf.predict(train_imgs)
+y_predicted = clf.predict(X_train)
 train_accuracy = prediction_accuracy(y_predicted, y_train)
 print("Training data set accuracy: ", train_accuracy)
 
