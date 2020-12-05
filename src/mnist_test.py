@@ -55,10 +55,10 @@ print("test_labels.shape=", test_labels.shape)
 
 clf = MyMLPClassifier( n_input = N_IMAGE_PIXELS, 
                        n_output = N_LABELS, 
-                       hidden_sizes = (128, 64), #define hidden layers
+                       hidden_sizes = (256, 128, 64, 32), #define hidden layers
                        learning_rate = 0.001, 
-                       n_epochs = 100, 
-                       batch_size = 32,
+                       n_epochs = 1000, 
+                       batch_size = 16,
                        alpha = 0.001,
                        #random_seed = 1,
                        activation = 'relu',
