@@ -35,7 +35,7 @@ from evaluation import MAX_ITERS
 
 
 # We run 10 times to measure the accuracy
-N = 3
+N = 10
 
 
 """ We start evaluation here.

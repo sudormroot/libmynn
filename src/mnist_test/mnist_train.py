@@ -29,7 +29,7 @@ X_train, y_train, X_test, y_test = mnist_dataset_load(dataset_path)
 
 clf = MyMLPClassifier( n_input = N_IMAGE_PIXELS, 
                        n_output = N_LABELS, 
-                       hidden_sizes = (28, 16), #define hidden layers
+                       hidden_sizes = (28, 28), #define hidden layers
                        learning_rate = 0.001, 
                        n_epochs = 100, 
                        batch_size = 16,
