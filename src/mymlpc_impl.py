@@ -19,7 +19,7 @@ import random
 import pickle 
 
 
-MYMLPC_VERSION="1.1"
+MYMLPC_VERSION="1.2"
 
 
 """ We implement a NN layer here.
