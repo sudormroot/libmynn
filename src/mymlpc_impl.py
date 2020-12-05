@@ -18,6 +18,10 @@ import numpy as np
 import random
 import pickle 
 
+
+MYMLPC_VERSION="1.1"
+
+
 """ We implement a NN layer here.
 
 """
@@ -265,6 +269,7 @@ class MyMLPClassifier:
                     random_seed = 0, # random seed
                     loss = 'MSE',
                     alpha = 0.0001, # regularization factor
+                    print_per_epoch = 1, #for debug
                     debug = False
                     ):
 
@@ -274,7 +279,7 @@ class MyMLPClassifier:
                             'MSE':(self.MSELoss, self.dMSELoss)
                         }
 
-        self.signature = __class__.__name__ 
+        self.signature = __class__.__name__ + "_version_" + MYMLPC_VERSION
 
         # We keep the parameters here for later uses.
         self.model = {}
@@ -300,6 +305,7 @@ class MyMLPClassifier:
             self.model['activation'] = activation
             self.model['random_seed'] = random_seed
             self.model['debug'] = debug
+            self.model['print_per_epoch'] = print_per_epoch
             self.model['alpha'] = alpha
             self.model['sorted_labels'] = [None] * self.model['n_output']
             self.model['loss'] = loss
@@ -307,6 +313,8 @@ class MyMLPClassifier:
             self.model['onehot_to_label'] = {}
             self.model['label_to_onehot'] = {}
 
+        if 'print_per_epoch' not in self.model:
+            self.model['print_per_epoch'] = print_per_epoch
 
         # Check parameters
         assert self.model['n_epochs'] >= 1
@@ -610,7 +618,7 @@ class MyMLPClassifier:
             # self.model['debug'] = True
 
             # Print accuracy for each 10 epochs
-            if epoch % 10 == 0 and self.model['debug'] == True:
+            if epoch % self.model['print_per_epoch'] == 0 and self.model['debug'] == True:
                 y_predicted = self.predict(X_train)
                 accuracy = self.accuracy(y_predicted, y_train)
                 print(f"epoch={epoch} loss={loss} accuracy={accuracy}")
