@@ -25,13 +25,13 @@ from mnist_dataset import prediction_accuracy
 dataset_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep \
                     + ".." + os.path.sep + ".." + os.path.sep + "dataset" + os.path.sep
 
-X_train, X_train, X_test, y_test = mnist_dataset_load(dataset_path)
+X_train, y_train, X_test, y_test = mnist_dataset_load(dataset_path)
 
 clf = MyMLPClassifier( n_input = N_IMAGE_PIXELS, 
                        n_output = N_LABELS, 
                        hidden_sizes = (28, 16), #define hidden layers
                        learning_rate = 0.001, 
-                       n_epochs = 1000, 
+                       n_epochs = 100, 
                        batch_size = 16,
                        alpha = 0.001,
                        #random_seed = 1,
