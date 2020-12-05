@@ -18,6 +18,10 @@ import numpy as np
 import random
 import pickle 
 
+
+MYMLPC_VERSION="1.1"
+
+
 """ We implement a NN layer here.
 
 """
@@ -59,6 +63,10 @@ class MyMLPCNNLayer:
         self.W = np.random.uniform(-1, 1, (self.n_neurons, self.n_input))
         self.b = np.random.uniform(-1, 1, (self.n_neurons, 1))
 
+        # normalize weights again to prevent overflow errors for exp().
+        #self.W = self.W / self.n_neurons
+        #self.b = self.b / self.n_neurons
+
         #if self.name == 'input':
         #    self.W = np.zeros((self.n_neurons, self.n_input))
         #    self.b = np.zeros((self.n_neurons, 1))
@@ -78,7 +86,7 @@ class MyMLPCNNLayer:
                     n_input, # the dimension of inputs
                     n_neurons = 11, # the number of neurons
                     random_seed = 0,  # we enable to configure the random seed
-                    learning_rate = 0.5, # learning rate
+                    learning_rate = 0.005, # learning rate
                     batch_size = 1, # batch size used for mini batch training
                     activation = 'sigmoid', # activation function
                     alpha = 0.0001, #regularization factor
@@ -109,8 +117,8 @@ class MyMLPCNNLayer:
         self.n_neurons = n_neurons
         self.alpha = alpha
 
-        if random_seed > 0:
-            np.random.seed(random_seed)
+        #if random_seed > 0:
+        #    np.random.seed(random_seed)
  
         self.W = None
         self.b = None
@@ -149,9 +157,18 @@ class MyMLPCNNLayer:
         # Keep a private copy
         self.x = x.copy()
 
+        #""" x is "m x k", W is "n x m", b is "n x 1"
+        #    y is "n x k"
+        #
+        #    k is batch size
+        #    n is the number of neurons.
+        #    m is the number of inputs
+        #"""
+
         # Compute y = w*x + b
         self.y = self.W.dot(self.x) + self.b
 
+        
         # Compute z = f(y)
         self.z = self.f(self.y)
         
@@ -165,17 +182,33 @@ class MyMLPCNNLayer:
 
     def backward(self, grad):
 
+
+        #""" grad is "n x 1"
+        #
+        #    k is batch size
+        #    n is the number of neurons.
+        #    m is the number of inputs
+        #"""
+
         #if self.name == 'input':
         #    return grad
+
+        #""" dLdz is "n x k"
+        #"""
 
         # Keep a private copy of dL / dz
         dLdz = grad.copy()
 
 
+        #""" dzdy is "n x k"
+        #"""
+
         # We compute the value of the derivative on z.
         # The value is dz / dy
         dzdy = self.df(self.y)
 
+        #""" dLdy is "n x k"
+        #"""
 
         # Compute (dL / dz) * (dz / dy)
         dLdy = dLdz * dzdy 
@@ -183,6 +216,10 @@ class MyMLPCNNLayer:
         # Compute the gradients of W and b
         #self.db = dLdy
         #self.dW = dLdy.reshape(-1, 1).dot(self.x.reshape(1, -1))
+
+        #""" dLdy "n x k"
+        #    x is "n x k"  
+        #"""
 
         self.dW = dLdy.dot(self.x.T) / self.batch_size
 
@@ -232,6 +269,7 @@ class MyMLPClassifier:
                     random_seed = 0, # random seed
                     loss = 'MSE',
                     alpha = 0.0001, # regularization factor
+                    print_per_epoch = 1, #for debug
                     debug = False
                     ):
 
@@ -241,7 +279,7 @@ class MyMLPClassifier:
                             'MSE':(self.MSELoss, self.dMSELoss)
                         }
 
-        self.signature = __class__.__name__ 
+        self.signature = __class__.__name__ + "_version_" + MYMLPC_VERSION
 
         # We keep the parameters here for later uses.
         self.model = {}
@@ -267,6 +305,7 @@ class MyMLPClassifier:
             self.model['activation'] = activation
             self.model['random_seed'] = random_seed
             self.model['debug'] = debug
+            self.model['print_per_epoch'] = print_per_epoch
             self.model['alpha'] = alpha
             self.model['sorted_labels'] = [None] * self.model['n_output']
             self.model['loss'] = loss
@@ -274,6 +313,8 @@ class MyMLPClassifier:
             self.model['onehot_to_label'] = {}
             self.model['label_to_onehot'] = {}
 
+        if 'print_per_epoch' not in self.model:
+            self.model['print_per_epoch'] = print_per_epoch
 
         # Check parameters
         assert self.model['n_epochs'] >= 1
@@ -400,12 +441,9 @@ class MyMLPClassifier:
     """
     
     def get_labels(self, y_train):
-
         labels = list(y_train)
         labels = list(set(labels))
-
         sorted_labels = sorted(labels)
-
         return sorted_labels
 
 
@@ -479,10 +517,11 @@ class MyMLPClassifier:
 
     """
 
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, reset_weights = True):
         
         # Re-initialize weights again.
-        self.init_weights()
+        if reset_weights:
+            self.init_weights()
 
         # Create labels
         self.model['sorted_labels'] = self.get_labels(y_train)
@@ -579,7 +618,7 @@ class MyMLPClassifier:
             # self.model['debug'] = True
 
             # Print accuracy for each 10 epochs
-            if epoch % 10 == 0 and self.model['debug'] == True:
+            if epoch % self.model['print_per_epoch'] == 0 and self.model['debug'] == True:
                 y_predicted = self.predict(X_train)
                 accuracy = self.accuracy(y_predicted, y_train)
                 print(f"epoch={epoch} loss={loss} accuracy={accuracy}")

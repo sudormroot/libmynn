@@ -31,11 +31,11 @@ from evaluation import print_results
 from evaluation import save_results
 from evaluation import draw_loss
 from evaluation import test_load_and_save_model
+from evaluation import MAX_ITERS
 
 
 # We run 10 times to measure the accuracy
-N = 10
-
+N = 3
 
 
 """ We start evaluation here.
@@ -142,6 +142,11 @@ if __name__ == '__main__':
     # Compute mean loss for all runs.
     my_loss_hists = np.array(my_loss_hists)
     my_loss_hist = np.mean(my_loss_hists, axis = 0)
+
+    for i, loss_hist in enumerate(sk_loss_hists):
+        if len(loss_hist) < MAX_ITERS:
+            loss_hist += [0] * (MAX_ITERS - len(loss_hist))
+            sk_loss_hists[i] = loss_hist
 
     sk_loss_hists = np.array(sk_loss_hists)
     sk_loss_hist = np.mean(sk_loss_hists, axis = 0)
