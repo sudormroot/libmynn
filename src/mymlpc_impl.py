@@ -22,6 +22,11 @@ import pickle
 MYMLPC_VERSION="1.2"
 
 
+#def prediction_accuracy(y_predicted, y_truth):
+#    return np.mean(y_predicted == y_truth)
+
+
+
 """ We implement a NN layer here.
 
 """
