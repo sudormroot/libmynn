@@ -153,9 +153,18 @@ class MyMLPCNNLayer:
         # Keep a private copy
         self.x = x.copy()
 
+        """ x is "m x k", W is "n x m", b is "n x 1"
+            y is "n x k"
+
+            k is batch size
+            n is the number of neurons.
+            m is the number of inputs
+        """
+
         # Compute y = w*x + b
         self.y = self.W.dot(self.x) + self.b
 
+        
         # Compute z = f(y)
         self.z = self.f(self.y)
         
@@ -169,17 +178,33 @@ class MyMLPCNNLayer:
 
     def backward(self, grad):
 
+
+        """ grad is "n x 1"
+
+            k is batch size
+            n is the number of neurons.
+            m is the number of inputs
+        """
+
         #if self.name == 'input':
         #    return grad
+
+        """ dLdz is "n x k"
+        """
 
         # Keep a private copy of dL / dz
         dLdz = grad.copy()
 
 
+        """ dzdy is "n x k"
+        """
+
         # We compute the value of the derivative on z.
         # The value is dz / dy
         dzdy = self.df(self.y)
 
+        """ dLdy is "n x k"
+        """
 
         # Compute (dL / dz) * (dz / dy)
         dLdy = dLdz * dzdy 
@@ -187,6 +212,10 @@ class MyMLPCNNLayer:
         # Compute the gradients of W and b
         #self.db = dLdy
         #self.dW = dLdy.reshape(-1, 1).dot(self.x.reshape(1, -1))
+
+        """ dLdy "n x k"
+            x is "n x k"  
+        """
 
         self.dW = dLdy.dot(self.x.T) / self.batch_size
 

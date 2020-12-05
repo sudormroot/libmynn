@@ -57,9 +57,9 @@ clf = MyMLPClassifier( n_input = N_IMAGE_PIXELS,
                        n_output = N_LABELS, 
                        hidden_sizes = (128, 64), #define hidden layers
                        learning_rate = 0.001, 
-                       n_epochs = 20, 
-                       batch_size = 8,
-                       alpha = 0.0001,
+                       n_epochs = 100, 
+                       batch_size = 32,
+                       alpha = 0.001,
                        #random_seed = 1,
                        activation = 'relu',
                        debug = True)
