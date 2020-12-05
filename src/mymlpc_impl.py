@@ -317,6 +317,7 @@ class MyMLPClassifier:
                                 batch_size = self.model['batch_size'], #batch_size,
                                 random_seed = self.model['random_seed'],
                                 activation = self.model['activation'],
+                                learning_rate = self.model['learning_rate'],
                                 alpha = self.model['alpha'],
                                 debug = self.model['debug']
                                 )
@@ -334,6 +335,7 @@ class MyMLPClassifier:
                                         batch_size = self.model['batch_size'], #batch_size,
                                         random_seed = self.model['random_seed'],
                                         activation = self.model['activation'],
+                                        learning_rate = self.model['learning_rate'],
                                         alpha = self.model['alpha'],
                                         debug = self.model['debug']
                                         )
@@ -352,6 +354,7 @@ class MyMLPClassifier:
                                     batch_size = self.model['batch_size'], #batch_size,
                                     random_seed = self.model['random_seed'],
                                     activation = 'sigmoid', 
+                                    learning_rate = self.model['learning_rate'],
                                     alpha = self.model['alpha'],
                                     debug = self.model['debug']
                                     )
