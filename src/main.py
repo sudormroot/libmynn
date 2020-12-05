@@ -85,7 +85,8 @@ if __name__ == '__main__':
 
     for i in range(N):
         
-        #print(f"--- {i} ---")
+        print(f"--- {i} ---")
+        #print("")
 
         X_train, y_train, X_test, y_test = split_dataset(df, "style")
 

@@ -86,7 +86,7 @@ class MyMLPCNNLayer:
                     n_input, # the dimension of inputs
                     n_neurons = 11, # the number of neurons
                     random_seed = 0,  # we enable to configure the random seed
-                    learning_rate = 0.5, # learning rate
+                    learning_rate = 0.005, # learning rate
                     batch_size = 1, # batch size used for mini batch training
                     activation = 'sigmoid', # activation function
                     alpha = 0.0001, #regularization factor

@@ -173,13 +173,14 @@ def test_load_and_save_model(X_train, y_train, X_test, y_test):
 
     clf1 = MyMLPClassifier( n_input = n_input, 
                         n_output = n_output, 
-                        hidden_sizes = (7,), #define hidden layers
-                        learning_rate = 0.001, 
-                        n_epochs = 101, 
+                        hidden_sizes = (13,), #define hidden layers
+                        learning_rate = 0.005, 
+                        n_epochs = 501, 
                         batch_size = 1,
                         alpha = 0.0001,
                         #random_seed = 1,
                         activation = 'relu',
+                        print_per_epoch = 10,
                         debug = True)
 
     
@@ -231,12 +232,13 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
     clf = MyMLPClassifier( n_input = n_input, 
                         n_output = n_output, 
                         hidden_sizes = (7,), #define hidden layers
-                        learning_rate = 0.001, 
-                        n_epochs = 101, 
+                        learning_rate = 0.005, 
+                        n_epochs = 501, 
                         batch_size = 1,
                         alpha = 0.0001,
                         #random_seed = 1,
                         activation = 'relu',
+                        print_per_epoch = 10,
                         debug = True)
 
     
@@ -285,11 +287,11 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
     clf = MLPClassifier(  solver = 'sgd', 
                           alpha = 0.0001,
                           activation = 'relu', 
-                          learning_rate_init = 0.001,
+                          learning_rate_init = 0.005,
                           hidden_layer_sizes = (7,), 
                           batch_size = 1,
                           #random_state = 1,
-                          max_iter = 101
+                          max_iter = 501
                           )
 
 
