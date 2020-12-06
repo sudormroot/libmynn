@@ -23,8 +23,8 @@ import os
 from mymlpc_impl import MyMLPClassifier
 
 
-MAX_ITERS=301
-LEARNING_RATE=0.01
+MAX_ITERS=501
+LEARNING_RATE=0.05
 
 
 """ Load beer data set as DataFrame

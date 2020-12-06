@@ -27,11 +27,18 @@ dataset_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep \
 
 X_train, y_train, X_test, y_test = mnist_dataset_load(dataset_path)
 
+
+#X_train = X_train[:2000]
+#y_train = y_train[:2000]
+
+#X_test = X_test[:500]
+#y_test = y_test[:500]
+
 clf = MyMLPClassifier( n_input = N_IMAGE_PIXELS, 
                        n_output = N_LABELS, 
-                       hidden_sizes = (128,), #define hidden layers
+                       hidden_sizes = (28,28,), #define hidden layers
                        learning_rate = 0.1, 
-                       n_epochs = 100, 
+                       n_epochs = 1000, 
                        batch_size = 6,
                        alpha = 0.001,
                        #random_seed = 1,

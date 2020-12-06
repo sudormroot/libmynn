@@ -19,7 +19,7 @@ import random
 import pickle 
 import json
 
-MYMLPC_VERSION="1.2"
+MYMLPC_VERSION="1.3"
 
 
 #def prediction_accuracy(y_predicted, y_truth):
@@ -240,6 +240,7 @@ class MyMLPClassifier:
                     learning_rate = 0.005, # The learning rate
                     batch_size = 200, # The batch size for mini batch training
                     n_epochs = 30,  # The number of epochs
+                    n_samples_per_epoch = -1, # The number of samples per epoch
                     threshold = 0.5, # The threshold for prediction
                     activation = 'relu', # activation function for input and hidden layers
                     random_seed = 0, # random seed
@@ -273,6 +274,7 @@ class MyMLPClassifier:
             self.model['signature'] = self.signature
             self.model['batch_size'] = batch_size
             self.model['n_epochs'] = n_epochs
+            self.model['n_samples_per_epoch'] = n_samples_per_epoch
             self.model['threshold'] = threshold
             self.model['n_input'] = n_input
             self.model['n_output'] = n_output
@@ -535,10 +537,16 @@ class MyMLPClassifier:
  
             xshape = X_train.shape
 
+            #if self.model['n_samples_per_epoch'] == -1:
+            #    n_samples = xshape[0]
+            #else:
+            #    n_samples = self.model['n_samples_per_epoch']
+
             n_samples = xshape[0]
 
             # Check batch size
             self.batch_size = min(self.model['batch_size'], n_samples)
+
             assert self.model['batch_size'] >= 1
 
             indices = np.arange(n_samples)
