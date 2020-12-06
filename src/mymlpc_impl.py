@@ -17,7 +17,7 @@ The training uses SGD with batch size by 1.
 import numpy as np
 import random
 import pickle 
-
+import json
 
 MYMLPC_VERSION="1.2"
 
@@ -721,7 +721,8 @@ class MyMLPClassifier:
             self.model['weights'].append(weights)
 
         pickle.dump(self.model, open(modelfile, "wb" ))
- 
+        #json.dump(self.model, open(modelfile, "wt" ), indent = 4)
+        
 
 
     """ Load model from a file
@@ -732,5 +733,6 @@ class MyMLPClassifier:
         print("Loading model: ", modelfile)
 
         self.model = pickle.load(open(modelfile, "rb" ))
+        #self.model = json.load(open(modelfile, "rt" ))
 
 

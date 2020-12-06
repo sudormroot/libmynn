@@ -23,8 +23,8 @@ import os
 from mymlpc_impl import MyMLPClassifier
 
 
-MAX_ITERS=101
-LEARNING_RATE=0.1
+MAX_ITERS=301
+LEARNING_RATE=0.01
 
 
 """ Load beer data set as DataFrame
@@ -252,11 +252,14 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
     
 
     test_accuracy = prediction_accuracy(y_predicted, y_test)
-    #print("Testing data set accuracy: ", accuracy)
 
     y_predicted = clf.predict(X_train)
     train_accuracy = prediction_accuracy(y_predicted, y_train)
-    #print("Training data set accuracy: ", accuracy)
+    
+    print("")
+    print("MYMLPC training data set accuracy: ", train_accuracy)
+    print("MYMLPC testing data set accuracy: ", test_accuracy)
+    print("")
 
     
     # we are required to log the prediction into a file
@@ -302,14 +305,17 @@ def evaluate_skmlpc(X_train, y_train, X_test, y_test):
     y_predicted = y_predicted.T
 
     test_accuracy = prediction_accuracy(y_predicted, y_test)
-    #print("Testing data set accuracy: ", accuracy)
 
     y_predicted = clf.predict(X_train)
     
     y_predicted = y_predicted.T
 
     train_accuracy = prediction_accuracy(y_predicted, y_train)
-    #print("Training data set accuracy: ", accuracy)
+
+    print("")
+    print("SK-MLPC training data set accuracy: ", train_accuracy)
+    print("SK-MLPC testing data set accuracy: ", test_accuracy)
+    print("")
 
     #print("----------- Finished -----------")
 
@@ -368,6 +374,9 @@ def draw_loss(my_loss_hist, sk_loss_hist):
 def print_results(results):
 
     print("")
+    print("-------------------------")
+    print("")
+
     print("My MLPC:")
     print("Average accuracy on testing dataset: ", results["mymlpc"]["test_mean"])
     print("Standard deviation on testing dataset: ", results["mymlpc"]["test_std"])
