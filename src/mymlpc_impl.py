@@ -316,6 +316,7 @@ class MyMLPClassifier:
         # Keep network structure as a list
         self.net = []
 
+        """
         # The input layer
         layer_input = MyMLPCNNLayer( 
                                 name = "input", 
@@ -332,6 +333,8 @@ class MyMLPClassifier:
         self.net.append(layer_input)
         
         n_neurons = self.model['hidden_sizes'][0]
+        """
+        n_neurons = self.model['n_input']
 
         # Hidden layers
         for i in range(len(self.model['hidden_sizes'])):

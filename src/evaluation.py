@@ -23,7 +23,7 @@ import os
 from mymlpc_impl import MyMLPClassifier
 
 
-MAX_ITERS=501
+MAX_ITERS=101
 LEARNING_RATE=0.05
 
 
