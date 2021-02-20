@@ -65,8 +65,13 @@ class MyMLPCNNLayer:
     # used for initializing weights.
     def init_weights(self):
 
-        self.W = np.random.uniform(-1, 1, (self.n_neurons, self.n_input))
-        self.b = np.random.uniform(-1, 1, (self.n_neurons, 1))
+        #self.W = np.random.uniform(-1, 1, (self.n_neurons, self.n_input))
+        #self.b = np.random.uniform(-1, 1, (self.n_neurons, 1))
+
+        d = 0.001
+
+        self.W = np.random.uniform(-d, d, (self.n_neurons, self.n_input))
+        self.b = np.random.uniform(-d, d, (self.n_neurons, 1))
 
         # normalize weights again to prevent overflow errors for exp().
         self.W = self.W / self.n_neurons
