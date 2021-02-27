@@ -62,20 +62,32 @@ class MyMLPCNNLayer:
     def drelu(self, x):
         return 1. * (x > 0)
 
+
+    def softmax(self, x):
+        return np.exp(x) / np.sum(np.exp(x), axis = 0)
+
+    def dsoftmax(self, x):
+        s = x.reshape(-1,1)
+        y = np.diagflat(s) - np.dot(s, s.T)
+        print("y=",y.T)
+        return y.T    
+        #return x
+
     # used for initializing weights.
     def init_weights(self):
 
         #self.W = np.random.uniform(-1, 1, (self.n_neurons, self.n_input))
         #self.b = np.random.uniform(-1, 1, (self.n_neurons, 1))
 
-        d = 0.001
+        sigma = 0.001
+        #mean = 0
 
-        self.W = np.random.uniform(-d, d, (self.n_neurons, self.n_input))
-        self.b = np.random.uniform(-d, d, (self.n_neurons, 1))
+        self.W = np.random.uniform(-sigma, sigma, (self.n_neurons, self.n_input))
+        self.b = np.random.uniform(-sigma, sigma, (self.n_neurons, 1))
 
         # normalize weights again to prevent overflow errors for exp().
-        self.W = self.W / self.n_neurons
-        self.b = self.b / self.n_neurons
+        #self.W = self.W / self.n_neurons
+        #self.b = self.b / self.n_neurons
 
         #if self.name == 'input':
         #    self.W = np.zeros((self.n_neurons, self.n_input))
@@ -110,7 +122,8 @@ class MyMLPCNNLayer:
 
         activations = { 'sigmoid':  (self.sigmoid,  self.dsigmoid),
                         'tanh':     (self.tanh,     self.dtanh),
-                        'relu':     (self.relu,     self.drelu)
+                        'relu':     (self.relu,     self.drelu),
+                        'softmax':  (self.softmax,  self.dsoftmax)
                         }
 
         # Check
@@ -228,6 +241,24 @@ class MyMLPCNNLayer:
 
 
 
+""" class MySoftMaxLayer:
+    def __init__(self):
+        self.x = None
+
+    def forward(self, x):
+        
+        self.x = x
+        self.p = np.exp(x) / np.sum(np.exp(x), axis = 0)
+
+        return self.p
+
+    def backward(self, grad):
+
+        grad = self.p - grad
+
+        return grad
+"""
+
 
 """ The class of the implementation of a simple Multiple Layer Perceptron Classifier
 
@@ -312,7 +343,7 @@ class MyMLPClassifier:
         self.loss = loss_functions[loss][0]
         self.dloss = loss_functions[loss][1]
 
-        self.loss_hist = []
+        self.loss_hist_ = []
 
         """ We define the network structure by using our MyMLPCNNLayer class as building blocks.
             
@@ -368,13 +399,16 @@ class MyMLPClassifier:
                                     n_neurons = self.model['n_output'], 
                                     batch_size = self.model['batch_size'], #batch_size,
                                     random_seed = self.model['random_seed'],
-                                    activation = 'sigmoid', 
+                                    activation = 'sigmoid', #'softmax'
                                     learning_rate = self.model['learning_rate'],
                                     alpha = self.model['alpha'],
                                     debug = self.model['debug']
                                     )
-
+        
         self.net.append(layer_output)
+
+        #layer_output = MySoftMaxLayer()
+        #self.net.append(layer_output)
 
         # set weights if loading from file
         if modelfile:
@@ -507,10 +541,10 @@ class MyMLPClassifier:
 
     """
 
-    def fit(self, X_train, y_train):
+    """ def fit(self, X_train, y_train, *, shuffle = True, kfold = 1, validation_ratio = 0.1):
         
         # Re-initialize weights again.
-        self.init_weights()
+        #self.init_weights()
 
         # Create labels
         self.model['sorted_labels'] = self.get_labels(y_train)
@@ -534,7 +568,140 @@ class MyMLPClassifier:
         y_train_onehot = np.array(y_train_onehot).T
 
         # loss history.
-        self.loss_hist = []
+        self.loss_hist_ = []
+
+        xshape = X_train.shape
+        n_samples = xshape[0]
+
+        # Checking input
+        assert X_train.shape[0] == y_train_onehot.shape[1]
+        assert kfold >= 1
+        assert X_train.shape[0] >= 1 # at least one sample
+        assert X_train.shape[0] >= kfold
+
+
+        kfold_data = {}
+
+        for k in range(kfold):
+
+            n_samples_per_fold = n_samples // kfold
+
+            assert n_samples_per_fold >= 1
+
+            kfold_data[k] = {}
+            kfold_data[k]["X_train"] = []
+            kfold_data[k]["y_train"] = []
+
+            kfold_data[k]["X_validation"] = []
+            kfold_data[k]["y_validation"] = []
+
+        # mini batch SGD implementation
+        #for epoch in range(self.n_epochs):
+        for epoch in range(self.model['n_epochs']):
+ 
+
+            #if self.model['n_samples_per_epoch'] == -1:
+            #    n_samples = xshape[0]
+            #else:
+            #    n_samples = self.model['n_samples_per_epoch']
+
+
+            # Check batch size
+            self.batch_size = min(self.model['batch_size'], n_samples)
+
+            assert self.model['batch_size'] >= 1
+
+            indices = np.arange(n_samples)
+
+            # reshuffle samples
+            np.random.shuffle(indices)
+
+            #debug
+            #print("indices=", indices)
+
+            grads = []
+
+            loss = 0
+            loss_hist = []
+
+            # Train with a batch size
+            for start_idx in range(0, n_samples - self.model['batch_size'] + 1, self.model['batch_size']):
+                end_idx = min(start_idx + self.model['batch_size'], xshape[0])
+
+                sel = indices[start_idx:end_idx]
+            
+                # select a batch of samples
+                X = X_train[sel]
+                #y_truth = y_train.T[sel].T
+                y_truth_onehot = y_train_onehot.T[sel].T
+
+                #print(y_truth_onehot.T)
+
+                # Compute forward propagation data
+                y_predicted_onehot = self.forward_propagation(X)
+                #print(y_predicted_onehot)
+                
+                #y_predicted = self.predict_prob(X)
+
+                #print("y_predicted.shape=", y_predicted.shape)
+
+                # Compute loss
+                #loss = self.MSELoss(y_predicted, y_truth)
+                loss = self.loss(y_predicted_onehot, y_truth_onehot)
+                #print("loss=", loss)
+                
+                loss_hist.append(loss)
+
+                # Compute the loss derivative value
+                #dloss = self.dMSELoss(y_predicted, y_truth)
+                dloss = self.dloss(y_predicted_onehot, y_truth_onehot) #+ self.regularization()
+                
+                # Do backward propagation
+                self.backward_propagation(dloss)
+
+
+            # Compute average loss for each epoch
+            avg_loss = np.mean(loss_hist)
+            self.loss_hist_.append(avg_loss)
+
+            # self.model['debug'] = True
+
+
+            # Print accuracy for each 10 epochs
+            if epoch % self.model['print_per_epoch'] == 0 and self.model['debug'] == True:
+                y_predicted = self.predict(X_train)
+                accuracy = self.accuracy(y_predicted, y_train)
+                print(f"epoch={epoch} loss={loss} accuracy={accuracy}")
+    """
+ 
+    def fit(self, X_train, y_train):
+        
+        # Re-initialize weights again.
+        #self.init_weights()
+
+        # Create labels
+        self.model['sorted_labels'] = self.get_labels(y_train)
+
+        if self.model['n_output'] > len(self.model['sorted_labels']):
+            self.model['sorted_labels'] += [None] * (self.model['n_output'] - len(self.model['sorted_labels']))
+
+
+        # label-to-onehot
+        n_labels = len(self.model['sorted_labels'])
+        onehot_I = np.eye(n_labels, dtype = np.double)
+        self.model['label_to_onehot'] = {k:tuple(onehot_I[i]) for i, k in enumerate(self.model['sorted_labels'])}
+        #print(self.model['label_to_onehot'].items())
+
+        # onehot-to-label
+        self.model['onehot_to_label'] = {v:k for k,v in self.model['label_to_onehot'].items()}
+        #print(self.model['onehot_to_label'])
+
+        # one-hot encoding for labels
+        y_train_onehot = [list(self.model['label_to_onehot'][y]) for y in y_train]
+        y_train_onehot = np.array(y_train_onehot).T
+
+        # loss history.
+        self.loss_hist_ = []
 
         # Checking input
         assert X_train.shape[0] == y_train_onehot.shape[1]
@@ -608,7 +775,7 @@ class MyMLPClassifier:
 
             # Compute average loss for each epoch
             avg_loss = np.mean(loss_hist)
-            self.loss_hist.append(avg_loss)
+            self.loss_hist_.append(avg_loss)
 
             # self.model['debug'] = True
 
@@ -720,7 +887,7 @@ class MyMLPClassifier:
     """
 
     def loss_history(self):
-        return np.array(self.loss_hist)
+        return np.array(self.loss_hist_)
 
 
     """ Save model to a file
