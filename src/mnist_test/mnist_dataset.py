@@ -72,10 +72,10 @@ def mnist_dataset_load(dataset_path):
     print("Training and testing datasets are loaded.")
 
 
-    scale = 0.99 / 255
+    scale = 1 / 255
 
-    X_train = np.asfarray(train_data[:, 1:]) * scale + 0.01
-    X_test = np.asfarray(test_data[:, 1:]) * scale + 0.01
+    X_train = np.asfarray(train_data[:, 1:]) * scale #+ 0.01
+    X_test = np.asfarray(test_data[:, 1:]) * scale #+ 0.01
 
     y_train = np.asfarray(train_data[:, :1])
     y_test = np.asfarray(test_data[:, :1])
