@@ -23,7 +23,7 @@ from mnist_dataset import prediction_accuracy
 
 
 dataset_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep \
-                    + ".." + os.path.sep + ".." + os.path.sep + "dataset" + os.path.sep
+                    + ".." + os.path.sep + ".." + os.path.sep + "dataset" + os.path.sep + "mnist_data"
 
 X_train, y_train, X_test, y_test = mnist_dataset_load(dataset_path)
 

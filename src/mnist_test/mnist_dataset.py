@@ -25,9 +25,49 @@ def mnist_dataset_load(dataset_path):
 
     print("Loading training and testing dataset ...")
 
-    train_data = np.loadtxt(dataset_path + "mnist_train.csv", delimiter=",")
 
-    test_data = np.loadtxt(dataset_path + "mnist_test.csv", delimiter=",") 
+    walk = os.walk(dataset_path)  
+
+    data = None
+
+    for path,dir_list,file_list in walk:  
+
+        for filename in file_list:  
+        
+            fullpath = os.path.join(path, filename) 
+
+            if filename.endswith(".txt"):
+
+                print(f"Loading f{filename}")
+
+                ds = np.loadtxt(fullpath, delimiter=",")
+
+                if data is None:
+                    data = ds
+                else:
+                    data = np.concatenate([data, ds])
+
+
+    print("Total {len(data)} data are loaded")
+
+    indices = np.arange(len(data))
+
+    np.random.shuffle(indices)
+
+    N_TRAIN_DATA = 3000
+    N_TEST_DATA = 100
+
+    train_indices = np.random.choice(indices, N_TRAIN_DATA)
+    test_indices = np.random.choice(indices, N_TEST_DATA)
+
+    train_data = data[train_indices]
+    test_data = data[test_indices]
+
+    print("train_data length: ", len(train_data))
+    print("test_data length: ", len(test_data))
+
+    #train_data = np.loadtxt(dataset_path + "mnist_train.csv", delimiter=",")
+    #test_data = np.loadtxt(dataset_path + "mnist_test.csv", delimiter=",") 
 
     print("Training and testing datasets are loaded.")
 
