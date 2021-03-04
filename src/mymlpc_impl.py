@@ -39,6 +39,12 @@ class MyMLPCNNLayer:
 
     """
 
+    def noact(self, x):
+        return x
+
+    def dnoact(self, x):
+        return x
+
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
 
@@ -64,14 +70,24 @@ class MyMLPCNNLayer:
 
 
     def softmax(self, x):
-        return np.exp(x) / np.sum(np.exp(x), axis = 0)
+
+        # Adding a constant number doesn't change the derivative form.
+        # This constant number can make the exp() stable.
+        z = x - np.max(x)
+
+        p = np.exp(z)
+
+        y = p / np.sum(p)
+        
+        return y
 
     def dsoftmax(self, x):
-        s = x.reshape(-1,1)
+
+        s = x.reshape(-1, 1)
+
         y = np.diagflat(s) - np.dot(s, s.T)
-        print("y=",y.T)
-        return y.T    
-        #return x
+
+        return y
 
     # used for initializing weights.
     def init_weights(self):
@@ -123,6 +139,7 @@ class MyMLPCNNLayer:
         activations = { 'sigmoid':  (self.sigmoid,  self.dsigmoid),
                         'tanh':     (self.tanh,     self.dtanh),
                         'relu':     (self.relu,     self.drelu),
+                        'none':     (self.noact,    self.dnoact),
                         'softmax':  (self.softmax,  self.dsoftmax)
                         }
 
@@ -134,6 +151,7 @@ class MyMLPCNNLayer:
             self.f = activations[activation][0]
             self.df = activations[activation][1]
 
+        self.activation = activation
         self.name = name
         self.batch_size = batch_size
         self.n_input = n_input
@@ -203,14 +221,23 @@ class MyMLPCNNLayer:
         dLdz = grad.copy()
 
 
+        #print("dLdz.shape=", dLdz.shape)
+
+
         # We compute the value of the derivative on z.
         # The value is dz / dy
+        
         dzdy = self.df(self.y)
+
+        #print("dzdy.shape=", dzdy.shape)
 
 
         # Compute (dL / dz) * (dz / dy)
-        dLdy = dLdz * dzdy 
-        
+        if self.activation == "softmax":
+            dLdy = dzdy @ dLdz
+        else:
+            dLdy = dLdz * dzdy 
+
         # Compute the gradients of W and b
         #self.db = dLdy
         #self.dW = dLdy.reshape(-1, 1).dot(self.x.reshape(1, -1))
@@ -241,23 +268,45 @@ class MyMLPCNNLayer:
 
 
 
-""" class MySoftMaxLayer:
+class MySoftMaxLayer:
+    
     def __init__(self):
         self.x = None
+    
+    def init_weights(self):
+        pass
 
     def forward(self, x):
-        
-        self.x = x
-        self.p = np.exp(x) / np.sum(np.exp(x), axis = 0)
+        # Adding a constant number doesn't change the derivative form.
+        # This constant number can make the exp() stable.
 
-        return self.p
+        z = x - np.max(x)
+
+
+        p = np.exp(z)
+
+        y = p / np.sum(p)
+        
+        self.y = y
+
+        #print("softmax =",y.flatten())
+
+        return y
 
     def backward(self, grad):
 
-        grad = self.p - grad
+        # the softmax(x), which is a nx1
+        y = self.y
 
-        return grad
-"""
+        s = y.reshape(-1, 1)
+
+        z = np.diagflat(s) - np.dot(s, s.T)
+
+        grad_out = z @ grad
+
+        return grad_out
+
+
 
 
 """ The class of the implementation of a simple Multiple Layer Perceptron Classifier
@@ -392,14 +441,29 @@ class MyMLPClassifier:
 
 
         # output layer
-        # We use sigmoid activation for last layer to score into [0, 1]
+        # We use softmax activation for last layer to score into [0, 1]
+        """ layer_output = MyMLPCNNLayer(    
+                                    name = "output", 
+                                    n_input = self.model['hidden_sizes'][-1], 
+                                    n_neurons = self.model['n_output'], 
+                                    batch_size = self.model['batch_size'], #batch_size,
+                                    random_seed = self.model['random_seed'],
+                                    #activation = 'softmax', 
+                                    activation = 'sigmoid',
+                                    learning_rate = self.model['learning_rate'],
+                                    alpha = self.model['alpha'],
+                                    debug = self.model['debug']
+                                    )
+        
+        """
+
         layer_output = MyMLPCNNLayer(    
                                     name = "output", 
                                     n_input = self.model['hidden_sizes'][-1], 
                                     n_neurons = self.model['n_output'], 
                                     batch_size = self.model['batch_size'], #batch_size,
                                     random_seed = self.model['random_seed'],
-                                    activation = 'sigmoid', #'softmax'
+                                    activation = 'sigmoid',
                                     learning_rate = self.model['learning_rate'],
                                     alpha = self.model['alpha'],
                                     debug = self.model['debug']
@@ -407,8 +471,9 @@ class MyMLPClassifier:
         
         self.net.append(layer_output)
 
-        #layer_output = MySoftMaxLayer()
-        #self.net.append(layer_output)
+        
+        #layer_softmax = MySoftMaxLayer()
+        #self.net.append(layer_softmax)
 
         # set weights if loading from file
         if modelfile:
