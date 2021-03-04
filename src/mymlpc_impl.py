@@ -295,12 +295,13 @@ class MySoftMaxLayer:
     def backward(self, grad):
 
         # the softmax(x), which is a nx1
-        y = self.y
-        s = y.reshape(-1, 1)
-        z = np.diagflat(y) - np.dot(s, s.T)
-        grad_out = z @ grad
+        #y = self.y
+        #s = y.reshape(-1, 1)
+        #z = np.diagflat(y) - np.dot(s, s.T)
+        #grad_out = z @ grad
 
-        #grad_out =  self.y * (grad -(grad * self.y).sum(axis = 1)[:,None])
+        # ref: https://sgugger.github.io/a-simple-neural-net-in-numpy.html
+        grad_out =  self.y * (grad -(grad * self.y).sum(axis = 1)[:,None])
 
         return grad_out
 
@@ -470,8 +471,8 @@ class MyMLPClassifier:
         self.net.append(layer_output)
 
         
-        layer_softmax = MySoftMaxLayer()
-        self.net.append(layer_softmax)
+        #layer_softmax = MySoftMaxLayer()
+        #self.net.append(layer_softmax)
 
         # set weights if loading from file
         if modelfile:
