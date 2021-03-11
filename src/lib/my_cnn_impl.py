@@ -16,4 +16,33 @@ import numpy as np
 import random
 import pickle 
 
+class MyConvLayer:
+    def __init__(   self, 
+                    *,
+                    name,
+                    pooling = "max", # max or mean
+                    activation = "relu",
+                    learning_rate = 0.5,
+                    kernel_size = (5, 5, 3), # 5x5x3
+                    n_kernels = 3
+                ):
+        pass
+
+    def relu(self, x):
+        pass
+    def drelu(self, x):
+        pass
+
+    def pooling_max(self, x):
+        pass
+
+    def dpooling_max(self, x):
+        pass
+
+    def forward(self, x):
+        pass
+    def backward(self, grad):
+        pass
+
+
 
