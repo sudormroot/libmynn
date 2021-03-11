@@ -21,7 +21,7 @@ N_IMAGE_SIZE = 28
 N_LABELS = 10
 N_IMAGE_PIXELS = N_IMAGE_SIZE * N_IMAGE_SIZE
 
-def mnist_dataset_load(dataset_path):
+def mnist_dataset_load(dataset_path, n = 0):
 
     print("Loading training and testing dataset ...")
 
@@ -29,6 +29,8 @@ def mnist_dataset_load(dataset_path):
     walk = os.walk(dataset_path)  
 
     data = None
+
+    i = 0
 
     for path,dir_list,file_list in walk:  
 
@@ -38,7 +40,7 @@ def mnist_dataset_load(dataset_path):
 
             if filename.endswith(".txt"):
 
-                print(f"Loading f{filename}")
+                print(f"Loading {filename}")
 
                 ds = np.loadtxt(fullpath, delimiter=",")
 
@@ -46,6 +48,11 @@ def mnist_dataset_load(dataset_path):
                     data = ds
                 else:
                     data = np.concatenate([data, ds])
+
+                if i > n and n > 0:
+                    return
+
+                i += 1
 
 
     print("Total {len(data)} data are loaded")
