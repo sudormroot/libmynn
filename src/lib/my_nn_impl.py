@@ -31,7 +31,7 @@ MYMLPC_VERSION="1.3"
 
 """
 
-class MyMLPCNNLayer:
+class MyNNLayer:
 
     """ Activation functions and their derivative forms.
         We allow users to choose 'sigmoid', 'tanh' and 'relu'
@@ -393,7 +393,7 @@ class MyMLPClassifier:
 
         self.loss_hist_ = []
 
-        """ We define the network structure by using our MyMLPCNNLayer class as building blocks.
+        """ We define the network structure by using our MyNNLayer class as building blocks.
             
         """
 
@@ -402,7 +402,7 @@ class MyMLPClassifier:
 
         """
         # The input layer
-        layer_input = MyMLPCNNLayer( 
+        layer_input = MyNNLayer( 
                                 name = "input", 
                                 n_input = self.model['n_input'], #n_input, 
                                 n_neurons = self.model['hidden_sizes'][0], 
@@ -422,7 +422,7 @@ class MyMLPClassifier:
 
         # Hidden layers
         for i in range(len(self.model['hidden_sizes'])):
-            layer_hidden = MyMLPCNNLayer(    
+            layer_hidden = MyNNLayer(    
                                         name = f"hidden_{i}", 
                                         n_input = n_neurons, 
                                         n_neurons = self.model['hidden_sizes'][i],
@@ -441,7 +441,7 @@ class MyMLPClassifier:
 
         # output layer
         # We use softmax activation for last layer to score into [0, 1]
-        """ layer_output = MyMLPCNNLayer(    
+        """ layer_output = MyNNLayer(    
                                     name = "output", 
                                     n_input = self.model['hidden_sizes'][-1], 
                                     n_neurons = self.model['n_output'], 
@@ -456,7 +456,7 @@ class MyMLPClassifier:
         
         """
 
-        layer_output = MyMLPCNNLayer(    
+        layer_output = MyNNLayer(    
                                     name = "output", 
                                     n_input = self.model['hidden_sizes'][-1], 
                                     n_neurons = self.model['n_output'], 

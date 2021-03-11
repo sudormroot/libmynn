@@ -25,7 +25,7 @@ sys.path.append(libpath)
 
 
 # This our implementation
-from mynn_impl import MyMLPClassifier
+from my_nn_impl import MyMLPClassifier
 
 
 MAX_ITERS=200
