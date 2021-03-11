@@ -8,8 +8,12 @@ import matplotlib.pyplot as plt
 
 import os
 
+import sys
+libpath = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + ".." + os.path.sep + "lib"
+sys.path.append(libpath)
+
 # This our implementation
-from mymlpc_impl import MyMLPClassifier
+from mynn_impl import MyMLPClassifier
 
 
 # import helper functions
@@ -22,7 +26,7 @@ from evaluation import save_results
 
 
 dataset_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep \
-                    + ".." + os.path.sep + "dataset" + os.path.sep  +"beer.txt"
+                    + ".." + os.path.sep + ".." + os.path.sep + "dataset" + os.path.sep  +"beer.txt"
 
 df = prepare_beer_dataset(dataset_path)
     

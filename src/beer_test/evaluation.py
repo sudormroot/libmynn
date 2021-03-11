@@ -19,8 +19,13 @@ import matplotlib.pyplot as plt
 
 import os
 
+import sys
+libpath = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + ".." + os.path.sep + "lib"
+sys.path.append(libpath)
+
+
 # This our implementation
-from mymlpc_impl import MyMLPClassifier
+from mynn_impl import MyMLPClassifier
 
 
 MAX_ITERS=200
@@ -262,6 +267,12 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
     print("")
 
     
+    resultdir = "results"
+
+    if not os.path.exists(resultdir):
+        os.makedirs(resultdir)
+
+
     # we are required to log the prediction into a file
     f = open("results" + os.path.sep + "mymlpc_prediction.txt", "at")
     f.write("\n")
