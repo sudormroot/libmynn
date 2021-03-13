@@ -233,10 +233,12 @@ class MyNNLayer:
 
 
         # Compute (dL / dz) * (dz / dy)
-        if self.activation == "softmax":
-            dLdy = dzdy @ dLdz
-        else:
-            dLdy = dLdz * dzdy 
+        #if self.activation == "softmax":
+        #    dLdy = dzdy @ dLdz
+        #else:
+        #    dLdy = dLdz * dzdy 
+
+        dLdy = dLdz * dzdy 
 
         # Compute the gradients of W and b
         #self.db = dLdy
@@ -280,29 +282,38 @@ class MySoftMaxLayer:
         # Adding a constant number doesn't change the derivative form.
         # This constant number can make the exp() stable.
 
+        #z = x.copy()
         z = x - np.max(x)
 
 
         p = np.exp(z)
 
-        y = p / np.sum(p)
+        s = np.sum(p)
+
+        y = p / s
     
         self.x = x
         self.y = y
+
+        #print("softmax: ", y.T)
 
         return self.y
 
     def backward(self, grad):
 
-        # the softmax(x), which is a nx1
-        #y = self.y
-        #s = y.reshape(-1, 1)
-        #z = np.diagflat(y) - np.dot(s, s.T)
-        #grad_out = z @ grad
+        # last y
+        y = self.y.reshape(1, -1)
 
-        # ref: https://sgugger.github.io/a-simple-neural-net-in-numpy.html
-        grad_out =  self.y * (grad -(grad * self.y).sum(axis = 1)[:,None])
+        # identity vector
+        e = np.ones(y.shape).reshape(1, -1)
 
+        # Computing the Jacobian matrix with the Kronecker delta matrix.
+        J = np.diagflat(e) - y.copy().T.reshape(-1, 1) @ e
+
+        # Computing the outputing gradients by multiplying 
+        # with the Jacobian matrix with inputing gradients
+        grad_out = J @ grad
+        
         return grad_out
 
 
@@ -469,10 +480,10 @@ class MyMLPClassifier:
                                     )
         
         self.net.append(layer_output)
-
         
-        #layer_softmax = MySoftMaxLayer()
-        #self.net.append(layer_softmax)
+        
+        layer_softmax = MySoftMaxLayer()
+        self.net.append(layer_softmax)
 
         # set weights if loading from file
         if modelfile:

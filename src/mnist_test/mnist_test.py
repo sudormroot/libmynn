@@ -9,11 +9,11 @@ import pandas as pd
 import os
 import sys
 
-parent_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + ".."
+parent_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + ".." + os.path.sep + "lib"
 sys.path.append(parent_path)
 
 # This our implementation
-from mymlpc_impl import MyMLPClassifier
+from my_nn_impl import MyMLPClassifier
 
 from mnist_dataset import mnist_dataset_load
 from mnist_dataset import N_IMAGE_SIZE

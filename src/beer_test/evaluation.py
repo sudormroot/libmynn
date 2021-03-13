@@ -226,7 +226,7 @@ def test_load_and_save_model(X_train, y_train, X_test, y_test):
 
 """
 
-def evaluate_mymlpc(X_train, y_train, X_test, y_test):
+def evaluate_mymlpc(X_train, y_train, X_test, y_test, epochs = MAX_ITERS):
 
     #print("")
     #print("----------- Evaluation of my MLPC algorithm -----------")
@@ -238,7 +238,7 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test):
                         n_output = n_output, 
                         hidden_sizes = (7,), #define hidden layers
                         learning_rate = LEARNING_RATE, 
-                        n_epochs = MAX_ITERS, 
+                        n_epochs = epochs, 
                         batch_size = 1,
                         alpha = 0.0001,
                         #random_seed = 1,
