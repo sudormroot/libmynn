@@ -19,6 +19,13 @@ import random
 import pickle 
 import json
 
+import os
+import sys
+libpath = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + ".." + os.path.sep + "lib"
+sys.path.append(libpath)
+
+from my_softmax import MySoftMaxLayer
+
 MYMLPC_VERSION="1.3"
 
 
@@ -78,7 +85,8 @@ class MyNNLayer:
         #self.b = np.random.uniform(-1, 1, (self.n_neurons, 1))
 
         #sigma = 0.001
-        sigma = 0.5
+        #sigma = 0.5
+        sigma = 1
         #mean = 0
 
         self.W = np.random.uniform(-sigma, sigma, (self.n_neurons, self.n_input))
@@ -249,66 +257,6 @@ class MyNNLayer:
 
 
 
-class MySoftMaxLayer:
-    
-    def __init__(self):
-        self.x = None
-    
-    def init_weights(self):
-        pass
-
-    def forward(self, x):
-        # Adding a constant number doesn't change the derivative form.
-        # This constant number can make the exp() stable.
-
-        #z = x.copy()
-        z = x - np.max(x)
-
-
-        p = np.exp(z)
-
-        s = np.sum(p)
-
-        y = p / s
-    
-        self.x = z
-        self.y = y
-
-        #print("softmax: ", y.T)
-
-        return self.y
-
-    def backward(self, grad):
-
-        """ We first compute the gradient matrix (Jacobian matrix)
-            for the given input vector where y is the input vector.
-
-        """
-
-        # last y
-        y = self.y.reshape(1, -1)
-
-        # identity vector
-        e = np.ones(y.shape).reshape(1, -1)
-
-        # Computing the Jacobian matrix with the Kronecker delta matrix.
-        J = np.diagflat(e) - y.copy().T.reshape(-1, 1) @ e
-
-        J = J * y.reshape(-1, 1)
-
-        """ We then compute the output gradient vector according to
-            the Jacobian matrix
-
-        """
-
-        # Computing the outputing gradients by multiplying 
-        # the Jacobian matrix with inputing gradients
-        grad_out = J @ grad
-        
-        return grad_out
-
-
-
 
 """ The class of the implementation of a simple Multiple Layer Perceptron Classifier
 
@@ -464,7 +412,7 @@ class MyMLPClassifier:
                                     n_neurons = self.model['n_output'], 
                                     batch_size = self.model['batch_size'], #batch_size,
                                     random_seed = self.model['random_seed'],
-                                    activation = 'none', #'relu' 'sigmoid',
+                                    activation = 'sigmoid',
                                     learning_rate = self.model['learning_rate'],
                                     alpha = self.model['alpha'],
                                     debug = self.model['debug']
@@ -473,8 +421,8 @@ class MyMLPClassifier:
         self.net.append(layer_output)
         
         
-        layer_softmax = MySoftMaxLayer()
-        self.net.append(layer_softmax)
+        #layer_softmax = MySoftMaxLayer()
+        #self.net.append(layer_softmax)
 
         # set weights if loading from file
         if modelfile:
