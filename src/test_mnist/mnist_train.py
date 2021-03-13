@@ -13,7 +13,7 @@ libpath = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + ".." + os.
 sys.path.append(libpath)
 
 # This our implementation
-from my_nn_impl import MyMLPClassifier
+from nn import MyMLPClassifier
 
 from mnist_dataset import mnist_dataset_load
 from mnist_dataset import N_IMAGE_SIZE
@@ -42,7 +42,7 @@ clf = MyMLPClassifier( n_input = N_IMAGE_PIXELS,
                        batch_size = 8,
                        alpha = 0.001,
                        #random_seed = 1,
-                       activation = 'relu',
+                       activation = 'tanh',
                        print_per_epoch = 1,
                        debug = True)
 

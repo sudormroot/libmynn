@@ -24,7 +24,7 @@ import sys
 libpath = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + ".." + os.path.sep + "lib"
 sys.path.append(libpath)
 
-from my_softmax import MySoftMaxLayer
+from softmax import MySoftMaxLayer
 
 MYMLPC_VERSION="1.3"
 
