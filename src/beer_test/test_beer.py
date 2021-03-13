@@ -47,6 +47,9 @@ print("")
 X_train, y_train, X_test, y_test = split_dataset(df, "style")
 
 # We evaluate our MLPC first.
-myclf, train_acc, test_acc = evaluate_mymlpc(X_train, y_train, X_test, y_test)
+myclf, train_acc, test_acc = evaluate_mymlpc(   X_train, y_train, 
+                                                X_test, y_test#, 
+                                                #epochs = 1000
+                                                )
 
 

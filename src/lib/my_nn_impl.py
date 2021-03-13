@@ -43,7 +43,7 @@ class MyNNLayer:
         return x
 
     def dnoact(self, x):
-        return x
+        return np.ones(x.shape).reshape(-1, 1)
 
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
@@ -63,31 +63,13 @@ class MyNNLayer:
     def relu(self, x):
         y = x.copy()
         y[y < 0] = 0
+        #print("y=",y)
+        
         return y
 
     def drelu(self, x):
         return 1. * (x > 0)
 
-
-    def softmax(self, x):
-
-        # Adding a constant number doesn't change the derivative form.
-        # This constant number can make the exp() stable.
-        z = x - np.max(x)
-
-        p = np.exp(z)
-
-        y = p / np.sum(p)
-        
-        return y
-
-    def dsoftmax(self, x):
-
-        s = x.reshape(-1, 1)
-
-        y = np.diagflat(s) - np.dot(s, s.T)
-
-        return y
 
     # used for initializing weights.
     def init_weights(self):
@@ -95,7 +77,8 @@ class MyNNLayer:
         #self.W = np.random.uniform(-1, 1, (self.n_neurons, self.n_input))
         #self.b = np.random.uniform(-1, 1, (self.n_neurons, 1))
 
-        sigma = 0.001
+        #sigma = 0.001
+        sigma = 0.5
         #mean = 0
 
         self.W = np.random.uniform(-sigma, sigma, (self.n_neurons, self.n_input))
@@ -140,7 +123,7 @@ class MyNNLayer:
                         'tanh':     (self.tanh,     self.dtanh),
                         'relu':     (self.relu,     self.drelu),
                         'none':     (self.noact,    self.dnoact),
-                        'softmax':  (self.softmax,  self.dsoftmax)
+                        #'softmax':  (self.softmax,  self.dsoftmax)
                         }
 
         # Check
@@ -226,18 +209,14 @@ class MyNNLayer:
 
         # We compute the value of the derivative on z.
         # The value is dz / dy
-        
+ 
+        #print("self.x.shape=", self.x.shape)
+
         dzdy = self.df(self.y)
 
         #print("dzdy.shape=", dzdy.shape)
 
-
-        # Compute (dL / dz) * (dz / dy)
-        #if self.activation == "softmax":
-        #    dLdy = dzdy @ dLdz
-        #else:
-        #    dLdy = dLdz * dzdy 
-
+        #dLdy = dLdz * dzdy 
         dLdy = dLdz * dzdy 
 
         # Compute the gradients of W and b
@@ -292,7 +271,7 @@ class MySoftMaxLayer:
 
         y = p / s
     
-        self.x = x
+        self.x = z
         self.y = y
 
         #print("softmax: ", y.T)
@@ -309,6 +288,8 @@ class MySoftMaxLayer:
 
         # Computing the Jacobian matrix with the Kronecker delta matrix.
         J = np.diagflat(e) - y.copy().T.reshape(-1, 1) @ e
+
+        J = J * y.reshape(-1, 1)
 
         # Computing the outputing gradients by multiplying 
         # the Jacobian matrix with inputing gradients
@@ -473,7 +454,7 @@ class MyMLPClassifier:
                                     n_neurons = self.model['n_output'], 
                                     batch_size = self.model['batch_size'], #batch_size,
                                     random_seed = self.model['random_seed'],
-                                    activation = 'relu',
+                                    activation = 'none', #'relu' 'sigmoid',
                                     learning_rate = self.model['learning_rate'],
                                     alpha = self.model['alpha'],
                                     debug = self.model['debug']
