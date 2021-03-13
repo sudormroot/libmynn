@@ -280,6 +280,11 @@ class MySoftMaxLayer:
 
     def backward(self, grad):
 
+        """ We first compute the gradient matrix (Jacobian matrix)
+            for the given input vector where y is the input vector.
+
+        """
+
         # last y
         y = self.y.reshape(1, -1)
 
@@ -290,6 +295,11 @@ class MySoftMaxLayer:
         J = np.diagflat(e) - y.copy().T.reshape(-1, 1) @ e
 
         J = J * y.reshape(-1, 1)
+
+        """ We then compute the output gradient vector according to
+            the Jacobian matrix
+
+        """
 
         # Computing the outputing gradients by multiplying 
         # the Jacobian matrix with inputing gradients
