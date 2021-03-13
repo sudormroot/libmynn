@@ -311,7 +311,7 @@ class MySoftMaxLayer:
         J = np.diagflat(e) - y.copy().T.reshape(-1, 1) @ e
 
         # Computing the outputing gradients by multiplying 
-        # with the Jacobian matrix with inputing gradients
+        # the Jacobian matrix with inputing gradients
         grad_out = J @ grad
         
         return grad_out
@@ -473,7 +473,7 @@ class MyMLPClassifier:
                                     n_neurons = self.model['n_output'], 
                                     batch_size = self.model['batch_size'], #batch_size,
                                     random_seed = self.model['random_seed'],
-                                    activation = 'sigmoid',
+                                    activation = 'relu',
                                     learning_rate = self.model['learning_rate'],
                                     alpha = self.model['alpha'],
                                     debug = self.model['debug']
