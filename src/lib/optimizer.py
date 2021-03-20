@@ -55,6 +55,9 @@ class MyOptimizerAdam:
                     s_gamma = 0.999 #factor for Adam optimiser
                     ):
  
+        self.n_input = n_input
+        self.n_output = n_output
+
         self.v_gamma = v_gamma
         self.s_gamma = s_gamma
 
