@@ -25,6 +25,9 @@ libpath = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + ".." + os.
 sys.path.append(libpath)
 
 from softmax import MySoftMaxLayer
+from optimizer import *
+
+
 
 MYMLPC_VERSION="1.3"
 
@@ -132,10 +135,12 @@ class MyNNLayer:
                     batch_size = 1, # batch size used for mini batch training
                     activation = 'sigmoid', # activation function
                     alpha = 0.0001, #regularization factor
-                    v_gamma = 0.99, #factor for Adam optimiser
-                    s_gamma = 0.99, #factor for Adam optimiser
+                    v_gamma = 0.9, #factor for Adam optimiser
+                    s_gamma = 0.999, #factor for Adam optimiser
                     W = None, # Used for loading model from file
                     b = None, # Used for loading model from file
+                    optimizer = "simple", 
+                    optimizer_options = {},
                     debug = False # debug flag
                     ):
 
@@ -154,6 +159,14 @@ class MyNNLayer:
                         'none':     (self.noact,    self.dnoact),
                         #'softmax':  (self.softmax,  self.dsoftmax)
                         }
+
+        optimizers = {  'simple':   MyOptimizerNaive,
+                        'adam':     MyOptimizerAdam}
+
+
+        assert optimizer in optimizers
+
+        self.optimizer = optimizers[optimizer](*optimizer_options)
 
         # Check
         # assert activation in activations
@@ -271,6 +284,7 @@ class MyNNLayer:
 
 
         # We can adjust weights now.
+        """
         #self.W = self.W - self.learning_rate * self.dW
         #self.b = self.b - self.learning_rate * self.db
 
@@ -287,17 +301,16 @@ class MyNNLayer:
         self.SdW = SdW_new
         self.Sdb = Sdb_new
 
-        epsilon = 1e-6
 
-        VCdW_new = self.VdW / (1 - self.v_gamma_at_t + epsilon)
-        VCdb_new = self.Vdb / (1 - self.v_gamma_at_t + epsilon)
+        VCdW_new = self.VdW / (1 - self.v_gamma_at_t)
+        VCdb_new = self.Vdb / (1 - self.v_gamma_at_t)
 
         self.VCdW = VCdW_new
         self.VCdb = VCdb_new
         
 
-        SCdW_new = self.SdW / (1 - self.s_gamma_at_t + epsilon)
-        SCdb_new = self.Sdb / (1 - self.s_gamma_at_t + epsilon)
+        SCdW_new = self.SdW / (1 - self.s_gamma_at_t)
+        SCdb_new = self.Sdb / (1 - self.s_gamma_at_t)
 
         self.SCdW = SCdW_new
         self.SCdb = SCdb_new
@@ -305,8 +318,22 @@ class MyNNLayer:
         self.v_gamma_at_t *= self.v_gamma
         self.s_gamma_at_t *= self.s_gamma
 
+        epsilon = 1e-8
+
         self.W = self.W - self.learning_rate * (self.VCdW / (np.sqrt(self.SCdW) + epsilon))
         self.b = self.b - self.learning_rate * (self.VCdb / (np.sqrt(self.SCdb) + epsilon))
+
+        #self.W = self.W - self.learning_rate * self.dW
+        #self.b = self.b - self.learning_rate * self.db
+        """
+
+        dW_new,db_new = self.optimizer.backward(self.dW, self.db)
+
+        self.W = self.W - self.learning_rate * dW_new
+        self.b = self.b - self.learning_rate * db_new
+
+        self.dW = dW_new
+        self.db = db_new
 
         return grad_next
 
