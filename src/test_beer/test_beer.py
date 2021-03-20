@@ -13,7 +13,7 @@ libpath = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + ".." + os.
 sys.path.append(libpath)
 
 # This our implementation
-from my_nn_impl import MyMLPClassifier
+from nn import MyMLPClassifier
 
 
 # import helper functions

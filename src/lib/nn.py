@@ -92,6 +92,19 @@ class MyNNLayer:
         self.W = np.random.uniform(-sigma, sigma, (self.n_neurons, self.n_input))
         self.b = np.random.uniform(-sigma, sigma, (self.n_neurons, 1))
 
+        #for Adam optimiser
+        self.VdW = np.zeros((self.n_neurons, self.n_input))
+        self.Vdb = np.zeros((self.n_neurons, 1))
+
+        self.SdW = np.zeros((self.n_neurons, self.n_input))
+        self.Sdb = np.zeros((self.n_neurons, 1))
+
+        self.VCdW = self.VdW
+        self.VCdb = self.Vdb
+
+        self.SCdW = self.SdW
+        self.SCdb = self.Sdb
+
         # normalize weights again to prevent overflow errors for exp().
         #self.W = self.W / self.n_neurons
         #self.b = self.b / self.n_neurons
@@ -119,6 +132,8 @@ class MyNNLayer:
                     batch_size = 1, # batch size used for mini batch training
                     activation = 'sigmoid', # activation function
                     alpha = 0.0001, #regularization factor
+                    v_gamma = 0.99, #factor for Adam optimiser
+                    s_gamma = 0.99, #factor for Adam optimiser
                     W = None, # Used for loading model from file
                     b = None, # Used for loading model from file
                     debug = False # debug flag
@@ -126,6 +141,12 @@ class MyNNLayer:
 
         # We keep all parameters here for later use.
         self.learning_rate = learning_rate
+        
+        self.v_gamma = v_gamma
+        self.s_gamma = s_gamma
+
+        self.v_gamma_at_t = v_gamma
+        self.s_gamma_at_t = s_gamma
 
         activations = { 'sigmoid':  (self.sigmoid,  self.dsigmoid),
                         'tanh':     (self.tanh,     self.dtanh),
@@ -250,8 +271,42 @@ class MyNNLayer:
 
 
         # We can adjust weights now.
-        self.W = self.W - self.learning_rate * self.dW
-        self.b = self.b - self.learning_rate * self.db
+        #self.W = self.W - self.learning_rate * self.dW
+        #self.b = self.b - self.learning_rate * self.db
+
+        # Adam implementation
+        VdW_new = (1 - self.v_gamma) * self.dW + self.v_gamma * self.VdW
+        Vdb_new = (1 - self.v_gamma) * self.db + self.v_gamma * self.Vdb
+
+        self.VdW = VdW_new
+        self.Vdb = Vdb_new
+
+        SdW_new = (1 - self.s_gamma) * (self.dW ** 2) + self.s_gamma * self.SdW
+        Sdb_new = (1 - self.s_gamma) * (self.db ** 2) + self.s_gamma * self.Sdb
+
+        self.SdW = SdW_new
+        self.Sdb = Sdb_new
+
+        epsilon = 1e-6
+
+        VCdW_new = self.VdW / (1 - self.v_gamma_at_t + epsilon)
+        VCdb_new = self.Vdb / (1 - self.v_gamma_at_t + epsilon)
+
+        self.VCdW = VCdW_new
+        self.VCdb = VCdb_new
+        
+
+        SCdW_new = self.SdW / (1 - self.s_gamma_at_t + epsilon)
+        SCdb_new = self.Sdb / (1 - self.s_gamma_at_t + epsilon)
+
+        self.SCdW = SCdW_new
+        self.SCdb = SCdb_new
+
+        self.v_gamma_at_t *= self.v_gamma
+        self.s_gamma_at_t *= self.s_gamma
+
+        self.W = self.W - self.learning_rate * (self.VCdW / (np.sqrt(self.SCdW) + epsilon))
+        self.b = self.b - self.learning_rate * (self.VCdb / (np.sqrt(self.SCdb) + epsilon))
 
         return grad_next
 
