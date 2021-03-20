@@ -25,7 +25,7 @@ sys.path.append(libpath)
 
 
 # This our implementation
-from nn import MyMLPClassifier
+from mlpc import MyMLPClassifier
 
 
 MAX_ITERS=200
