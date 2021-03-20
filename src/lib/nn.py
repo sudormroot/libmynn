@@ -140,7 +140,7 @@ class MyNNLayer:
                     s_gamma = 0.999, #factor for Adam optimiser
                     W = None, # Used for loading model from file
                     b = None, # Used for loading model from file
-                    optimizer = "simple", 
+                    optimizer = "sgd", 
                     optimizer_options = {},
                     debug = False # debug flag
                     ):
@@ -162,8 +162,8 @@ class MyNNLayer:
                         #'softmax':  (self.softmax,  self.dsoftmax)
                         }
 
-        optimizers = {  'simple':   MyOptimizerNaive,
-                        'adam':     MyOptimizerAdam}
+        optimizers = {  'sgd':   MyOptimizerNaive,
+                        'adam':  MyOptimizerAdam}
 
 
         assert optimizer in optimizers
@@ -288,48 +288,8 @@ class MyNNLayer:
 
 
         # We can adjust weights now.
-        """
         #self.W = self.W - self.learning_rate * self.dW
         #self.b = self.b - self.learning_rate * self.db
-
-        # Adam implementation
-        VdW_new = (1 - self.v_gamma) * self.dW + self.v_gamma * self.VdW
-        Vdb_new = (1 - self.v_gamma) * self.db + self.v_gamma * self.Vdb
-
-        self.VdW = VdW_new
-        self.Vdb = Vdb_new
-
-        SdW_new = (1 - self.s_gamma) * (self.dW ** 2) + self.s_gamma * self.SdW
-        Sdb_new = (1 - self.s_gamma) * (self.db ** 2) + self.s_gamma * self.Sdb
-
-        self.SdW = SdW_new
-        self.Sdb = Sdb_new
-
-
-        VCdW_new = self.VdW / (1 - self.v_gamma_at_t)
-        VCdb_new = self.Vdb / (1 - self.v_gamma_at_t)
-
-        self.VCdW = VCdW_new
-        self.VCdb = VCdb_new
-        
-
-        SCdW_new = self.SdW / (1 - self.s_gamma_at_t)
-        SCdb_new = self.Sdb / (1 - self.s_gamma_at_t)
-
-        self.SCdW = SCdW_new
-        self.SCdb = SCdb_new
-
-        self.v_gamma_at_t *= self.v_gamma
-        self.s_gamma_at_t *= self.s_gamma
-
-        epsilon = 1e-8
-
-        self.W = self.W - self.learning_rate * (self.VCdW / (np.sqrt(self.SCdW) + epsilon))
-        self.b = self.b - self.learning_rate * (self.VCdb / (np.sqrt(self.SCdb) + epsilon))
-
-        #self.W = self.W - self.learning_rate * self.dW
-        #self.b = self.b - self.learning_rate * self.db
-        """
 
         dW_new,db_new = self.optimizer.backward(self.dW, self.db)
 
@@ -338,6 +298,69 @@ class MyNNLayer:
 
         self.dW = dW_new
         self.db = db_new
+
+
+        return grad_next
+
+
+    def new_backward(self, grad):
+
+        #if self.name == 'input':
+        #    return grad
+
+        # Keep a private copy of dL / dz
+        dLdz = grad.copy()
+
+
+        #print("dLdz.shape=", dLdz.shape)
+
+
+        # We compute the value of the derivative on z.
+        # The value is dz / dy
+ 
+        #print("self.x.shape=", self.x.shape)
+
+        dzdy = self.df(self.y)
+
+        #print("dzdy.shape=", dzdy.shape)
+
+        #dLdy = dLdz * dzdy 
+        dLdy = dLdz * dzdy 
+
+        # Compute the gradients of W and b
+        #self.db = dLdy
+        #self.dW = dLdy.reshape(-1, 1).dot(self.x.reshape(1, -1))
+
+        self.dW = dLdy.dot(self.x.T) / self.batch_size
+
+        self.db = np.mean(dLdy, axis=1).reshape(-1, 1)
+
+        # regularisation terms
+        #self.dW += self.alpha * self.W
+        #self.db += self.alpha * self.b
+
+        # Compute the output gradients for prior layer.
+        #grad_next = dLdy.dot(self.W)
+        grad_next = dLdy.T.dot(self.W)
+
+
+        grad_next = np.sum(grad_next, axis = 0) / self.batch_size
+
+        grad_next = grad_next.reshape(-1, 1)
+
+
+        # We can adjust weights now.
+        self.W = self.W - self.learning_rate * self.dW
+        self.b = self.b - self.learning_rate * self.db
+
+        #dW_new,db_new = self.optimizer.backward(self.dW, self.db)
+
+        #self.W = self.W - self.learning_rate * dW_new
+        #self.b = self.b - self.learning_rate * db_new
+
+        #self.dW = dW_new
+        #self.db = db_new
+        
 
         return grad_next
 
