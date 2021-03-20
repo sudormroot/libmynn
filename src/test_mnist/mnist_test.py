@@ -13,7 +13,7 @@ parent_path = os.path.dirname(os.path.realpath(__file__)) + os.path.sep + ".." +
 sys.path.append(parent_path)
 
 # This our implementation
-from nn import MyMLPClassifier
+from mlpc import MyMLPClassifier
 
 from mnist_dataset import mnist_dataset_load
 from mnist_dataset import N_IMAGE_SIZE
