@@ -30,7 +30,11 @@ sys.path.append(libpath)
 """
 
 class MyOptimizerNaive:
-    def __init__(self):
+    def __init__(   self,
+                    *,
+                    n_input, # the dimension of inputs
+                    n_output # the number of neurons
+                    ):
         pass
 
     def backward(self, dW, db):

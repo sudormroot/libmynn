@@ -168,7 +168,9 @@ class MyNNLayer:
 
         assert optimizer in optimizers
 
-        self.optimizer = optimizers[optimizer](*optimizer_options)
+        self.optimizer = optimizers[optimizer]( n_input = n_input, 
+                                                n_output = n_neurons,
+                                                *optimizer_options)
 
         # Check
         # assert activation in activations
