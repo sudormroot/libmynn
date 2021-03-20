@@ -80,14 +80,14 @@ class MyOptimizerAdam:
     def backward(self, dW, db):
 
         # Adam implementation
-        VdW_new = (1 - self.v_gamma) * dW + self.v_gamma * VdW
-        Vdb_new = (1 - self.v_gamma) * db + self.v_gamma * Vdb
+        VdW_new = (1 - self.v_gamma) * dW + self.v_gamma * self.VdW
+        Vdb_new = (1 - self.v_gamma) * db + self.v_gamma * self.Vdb
 
         self.VdW = VdW_new
         self.Vdb = Vdb_new
 
-        SdW_new = (1 - self.s_gamma) * (self.dW ** 2) + self.s_gamma * self.SdW
-        Sdb_new = (1 - self.s_gamma) * (self.db ** 2) + self.s_gamma * self.Sdb
+        SdW_new = (1 - self.s_gamma) * (dW ** 2) + self.s_gamma * self.SdW
+        Sdb_new = (1 - self.s_gamma) * (db ** 2) + self.s_gamma * self.Sdb
 
         self.SdW = SdW_new
         self.Sdb = Sdb_new
