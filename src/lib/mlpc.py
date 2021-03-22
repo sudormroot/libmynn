@@ -47,7 +47,8 @@ class MyMLPClassifier:
                     n_epochs = 30,  # The number of epochs
                     n_samples_per_epoch = -1, # The number of samples per epoch
                     threshold = 0.5, # The threshold for prediction
-                    activation = 'relu', # activation function for input and hidden layers
+                    hidden_activation = 'relu', # activation function for input and hidden layers
+                    output_activation = 'sigmoid',
                     random_seed = 0, # random seed
                     loss = 'MSE',
                     alpha = 0.0001, # regularization factor
@@ -87,7 +88,8 @@ class MyMLPClassifier:
             self.model['n_output'] = n_output
             self.model['hidden_sizes'] = hidden_sizes
             self.model['learning_rate'] = learning_rate
-            self.model['activation'] = activation
+            self.model['hidden_activation'] = hidden_activation
+            self.model['output_activation'] = output_activation
             self.model['random_seed'] = random_seed
             self.model['print_per_epoch'] = print_per_epoch
             self.model['debug'] = debug
@@ -153,7 +155,7 @@ class MyMLPClassifier:
                                         n_neurons = self.model['hidden_sizes'][i],
                                         batch_size = self.model['batch_size'], #batch_size,
                                         random_seed = self.model['random_seed'],
-                                        activation = self.model['activation'],
+                                        activation = self.model['hidden_activation'],
                                         learning_rate = self.model['learning_rate'],
                                         alpha = self.model['alpha'],
                                         optimizer = self.model['optimizer'],
@@ -167,21 +169,7 @@ class MyMLPClassifier:
 
 
         # output layer
-        # We use softmax activation for last layer to score into [0, 1]
-        """ layer_output = MyNNLayer(    
-                                    name = "output", 
-                                    n_input = self.model['hidden_sizes'][-1], 
-                                    n_neurons = self.model['n_output'], 
-                                    batch_size = self.model['batch_size'], #batch_size,
-                                    random_seed = self.model['random_seed'],
-                                    #activation = 'softmax', 
-                                    activation = 'sigmoid',
-                                    learning_rate = self.model['learning_rate'],
-                                    alpha = self.model['alpha'],
-                                    debug = self.model['debug']
-                                    )
-        
-        """
+        # We use softmax activation for last layer to score into [0, 1]        
 
         layer_output = MyNNLayer(    
                                     name = "output", 
@@ -189,7 +177,7 @@ class MyMLPClassifier:
                                     n_neurons = self.model['n_output'], 
                                     batch_size = self.model['batch_size'], #batch_size,
                                     random_seed = self.model['random_seed'],
-                                    activation = 'sigmoid',
+                                    activation = self.model['output_activation'],
                                     learning_rate = self.model['learning_rate'],
                                     alpha = self.model['alpha'],
                                     optimizer = self.model['optimizer'],
@@ -495,6 +483,9 @@ class MyMLPClassifier:
 
         # loss history.
         self.loss_hist_ = []
+        
+        # accuracy history.
+        self.accuracy_hist_ = []
 
         # Checking input
         assert X_train.shape[0] == y_train_onehot.shape[1]
@@ -579,6 +570,9 @@ class MyMLPClassifier:
                 accuracy = self.accuracy(y_predicted, y_train)
                 print(f"epoch={epoch} loss={loss} accuracy={accuracy}")
  
+                self.accuracy_hist_.append(accuracy)
+
+
             """ Old implementation with batch size 1
             idx = np.random.permutation(n_samples)
 
