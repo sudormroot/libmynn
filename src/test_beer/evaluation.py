@@ -184,7 +184,7 @@ def test_load_and_save_model(X_train, y_train, X_test, y_test):
                         batch_size = 1,
                         alpha = 0.0001,
                         #random_seed = 1,
-                        activation = 'relu',
+                        hidden_activation = 'relu',
                         print_per_epoch = 10,
                         debug = True)
 
@@ -242,7 +242,7 @@ def evaluate_mymlpc(X_train, y_train, X_test, y_test, epochs = MAX_ITERS):
                         batch_size = 1,
                         alpha = 0.0001,
                         #random_seed = 1,
-                        activation = 'relu',
+                        hidden_activation = 'relu',
                         print_per_epoch = 10,
                         debug = True)
 
